@@ -49,9 +49,9 @@ class Sessions:
         return jwt.encode(to_encode, os.environ.get('SECRET_KEY'), algorithm=ALGORITHM)
 
     @staticmethod
-    @logger.catch
     async def get_current_user(token: Annotated[HTTPAuthorizationCredentials, Depends(bearer)]):
         if token is None:
+            logger.error("Missing token")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Missing token",
@@ -60,6 +60,7 @@ class Sessions:
             payload = jwt.decode(token.credentials, os.environ.get('SECRET_KEY'), algorithms=[ALGORITHM])
             uuid: str = payload.get("uuid")
             if uuid is None:
+                logger.error("Could not validate credentials")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Could not validate credentials",
@@ -69,15 +70,19 @@ class Sessions:
                 user = db.exec(select(User).where(User.uuid == uuid)).first()
 
         except InvalidTokenError:
+            logger.error("Invalid token")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
             )
 
         if user is None:
+            logger.error(f"User with uuid {uuid} not found")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
             )
+        else:
+            logger.info(f"User {user.username} authenticated")
 
         return user

@@ -8,6 +8,8 @@ from sqlalchemy import pool
 from alembic import context
 import sys
 
+from sqlmodel import SQLModel
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.deps import get_url

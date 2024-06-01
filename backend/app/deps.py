@@ -1,6 +1,9 @@
 import os
 
-from app.models.db.models import *
+from sqlalchemy import create_engine
+
+from app.models.db import *
+from sqlmodel import Session
 
 
 def get_url():

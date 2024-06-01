@@ -16,7 +16,7 @@ class Users:
     @router.get(
         "/me",
         response_model=User,
-        response_model_exclude={"password_hash"},
+        response_model_exclude={"password_hash", "id"}
     )
     async def read_users_me(
             current_user: Annotated[User, Depends(Sessions.get_current_user)],

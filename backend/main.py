@@ -11,10 +11,35 @@ from fastapi.middleware.gzip import GZipMiddleware
 from loguru import logger
 from sqlmodel import select, Session
 
-from app.deps import get_db, get_url, engine
+from app.deps import get_url, engine
 from app.models.db import User
+from app.routes.photos import Photos
 from app.routes.sessions import Sessions
 from app.routes.users import Users
+
+
+class InterceptHandler(logging.Handler):
+    """
+    Default handler from examples in loguru documentaion.
+    See https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging
+    """
+
+    def emit(self, record: logging.LogRecord):
+        # Get corresponding Loguru level if it exists
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        # Find caller from where originated the logged message
+        frame, depth = logging.currentframe(), 2
+        while frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 def only_level(level):
@@ -25,6 +50,19 @@ def only_level(level):
 
 
 logger.remove()
+
+loggers = (
+    logging.getLogger(name)
+    for name in logging.root.manager.loggerDict
+    if name.startswith("uvicorn.")
+)
+for uvicorn_logger in loggers:
+    uvicorn_logger.handlers = []
+
+# change handler for default uvicorn logger
+intercept_handler = InterceptHandler()
+logging.getLogger("uvicorn").handlers = [intercept_handler]
+
 logger.add(
     sys.stdout,
     colorize=True,
@@ -39,7 +77,7 @@ logger.add(
     level=logging.DEBUG,
     filter=only_level("DEBUG")
 )
-
+# intercept uvicorn logs
 
 
 @logger.catch
@@ -90,6 +128,7 @@ app.add_middleware(
 
 app.include_router(Sessions.router)
 app.include_router(Users.router)
+app.include_router(Photos.router)
 
 
 @app.middleware("http")
