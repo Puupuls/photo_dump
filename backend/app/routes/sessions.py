@@ -3,16 +3,17 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 import jwt
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import InvalidTokenError
 from loguru import logger
-from pydantic import BaseModel
-from sqlmodel import select, Session
+from sqlmodel import select, Session, or_
 from starlette import status
 
-from ..deps import get_db, engine
-from ..models import User
+from app.deps import get_db, engine
+from app.models.db import User
+from app.models.api.login_request import LoginRequest
+from app.models.api.login_response import LoginResponse
 
 ALGORITHM = "HS256"
 bearer = HTTPBearer(
@@ -26,22 +27,20 @@ class Sessions:
         tags=["auth"]
     )
 
-    class LoginData(BaseModel):
-        username: str
-        password: str
-
     @staticmethod
     @router.post("/login")
-    async def login(data: LoginData, request: Request, session=Depends(get_db)):
-        user = session.exec(select(User).where(User.username == data.username)).first()
+    async def login(data: LoginRequest, session=Depends(get_db)) -> LoginResponse:
+        user = session.exec(select(User).where(or_(User.username == data.username, User.email == data.username))).first()
         if not user:
             raise HTTPException(status_code=400, detail="Incorrect username or password")
 
         if not user.authenticate_user(data.password):
             raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-        token = Sessions.generate_token(user)
-        return {"token": token}
+        response = LoginResponse(
+            token=Sessions.generate_token(user)
+        )
+        return response
 
     @staticmethod
     def generate_token(user: User):

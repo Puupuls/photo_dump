@@ -12,7 +12,7 @@ from loguru import logger
 from sqlmodel import select, Session
 
 from app.deps import get_db, get_url, engine
-from app.models import User
+from app.models.db import User
 from app.routes.sessions import Sessions
 from app.routes.users import Users
 
@@ -60,7 +60,12 @@ async def lifespan(app_: FastAPI):
         any_user = session.exec(select(User)).first()
         if not any_user:
             logger.info("Creating default user...")
-            user = User(username="admin", email="admin@admin.admin", hashed_password=User.get_password_hash("admin"))
+            user = User(
+                username="admin",
+                email="admin@admin.admin",
+                hashed_password=User.get_password_hash("admin"),
+                is_admin=True
+            )
             session.add(user)
             session.commit()
         else:

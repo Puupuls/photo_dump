@@ -1,11 +1,24 @@
 import { api } from './API';
 
-class Session {
+export class Session {
+  static _instance: Session;
+
+  static get instance() {
+    if (!this._instance) {
+      this._instance = new Session();
+    }
+    return this._instance;
+  }
+
   constructor() {
     const token = localStorage.getItem('token');
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
+  }
+
+  getToken() {
+    return localStorage.getItem('token');
   }
 
   async login(username: string, password: string) {
@@ -29,6 +42,9 @@ class Session {
 
   async getCurrentUser() {
     try {
+      if (!localStorage.getItem('token')) {
+        return null;
+      }
       const response = await api.get('/users/me');
       return response.data;
     } catch (error) {

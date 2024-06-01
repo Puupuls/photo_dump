@@ -6,13 +6,12 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from sqlmodel import SQLModel
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.deps import get_url
-from app.models import *
+from app.models.db import *
 
 # include parent dir in path
 

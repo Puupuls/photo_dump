@@ -1,31 +1,44 @@
-import React, {useEffect, useState} from 'react';
-import {CssBaseline, ThemeProvider} from "@mui/material";
-import {createThemes} from "./theme";
+import React, {useEffect, useMemo, useState} from 'react';
+import {CssBaseline, CssVarsProvider} from "@mui/material";
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import LoginPage from "./pages/auth/login";
+import {createTheme, defaultUiConfig, useUiConfig} from "./theme";
+import MainPage from "./pages/site/site";
+import {Session} from "./controllers/Sessions";
+import UiConfig from "./models/uiConfig";
 
 function App() {
-  const [darkMode, setDarkMode] = useState(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [primaryColor, setPrimaryColor] = useState('#19d276')
-  const {darkTheme, lightTheme} = createThemes(primaryColor);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const changeHandler = () => setDarkMode(mediaQuery.matches);
-    mediaQuery.addEventListener('change', changeHandler);
-    return () => mediaQuery.removeEventListener('change', changeHandler);
+    const token = Session.instance.getToken()
+    if (!token && window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   }, []);
 
-  const theme = darkMode ? darkTheme : lightTheme;
+  const {uiConfig, setUiConfig} = useUiConfig();
+  useEffect(() => {
+    window.document.title = uiConfig.appName;
+  }, [uiConfig.appName]);
+  const theme = useMemo(() => createTheme(uiConfig), [uiConfig])
   return (
-    <ThemeProvider theme={theme}>
+    <CssVarsProvider
+        theme={theme}
+        defaultMode={'system'}
+        disableTransitionOnChange={false}
+        modeStorageKey={'theme'}
+        attribute={'class'}
+    >
       <CssBaseline />
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route
+              path="/*"
+              element={<MainPage />} />
         </Routes>
       </Router>
-    </ThemeProvider>
+    </CssVarsProvider>
   );
 }
 

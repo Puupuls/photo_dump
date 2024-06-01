@@ -2,8 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.deps import get_db
-from app.models import User
+from app.models.db import User
 from app.routes.sessions import Sessions
 
 
@@ -17,6 +16,7 @@ class Users:
     @router.get(
         "/me",
         response_model=User,
+        response_model_exclude={"password_hash"},
     )
     async def read_users_me(
             current_user: Annotated[User, Depends(Sessions.get_current_user)],
