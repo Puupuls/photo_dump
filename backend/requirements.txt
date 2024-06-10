@@ -8,3 +8,7 @@ passlib[bcrypt]
 pydantic
 pyjwt
 loguru
+opencv-python
+Pillow
+python-multipart
+exif

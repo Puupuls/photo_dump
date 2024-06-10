@@ -33,6 +33,7 @@ import {
 } from "@mui/icons-material";
 import {Session} from "../../controllers/Sessions";
 import {Upload, useUploadStatus} from "../../controllers/Upload";
+import {UploadTasks} from "./components/UploadTasks";
 
 
 function MainPage() {
@@ -41,7 +42,6 @@ function MainPage() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const mobile = useMediaQuery('@media (max-width: 600px)');
     const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
-    const {uploadTasks} = useUploadStatus();
 
 
     return (
@@ -173,6 +173,7 @@ function MainPage() {
                     <Routes>
                         <Route path="/" element={<PhotosPage/>} />
                     </Routes>
+                    <UploadTasks/>
                 </Box>
             </Grid>
         </Grid>

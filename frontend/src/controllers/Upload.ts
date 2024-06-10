@@ -22,6 +22,11 @@ export const useUploadStatus = () => {
     return {uploadTasks, setUploadTasks};
 }
 
+export const useIsAllUploadsComplete = () => {
+    const {uploadTasks} = useUploadStatus();
+    return uploadTasks.filter((task) => task.status === 'uploading').length === 0;
+}
+
 export class Upload {
     static eventEmitter = new EventEmitter();
     static _instance: Upload;
@@ -56,20 +61,25 @@ export class Upload {
             nextTask.status = 'uploading';
             const formData = new FormData();
             formData.append('file', nextTask.file);
+            formData.append('modified_timestamp', nextTask.file.lastModified.toString());
+
             api.put('/photos/', formData, {
                 onUploadProgress: (progressEvent) => {
                     nextTask.progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total??1));
                     Upload.eventEmitter.emit('uploadUpdate');
                 },
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
                 }
             }).then(() => {
                 Upload.eventEmitter.emit('uploadUpdate');
                 nextTask.status = 'complete';
             }).catch((error) => {
                 nextTask.status = 'complete';
-                nextTask.error = error.response.data.detail;
+                if(error.response && error.response.data && error.response.data.detail)
+                    nextTask.error = error.response.data.detail;
+                else
+                    nextTask.error = 'Failed to upload';
                 Upload.eventEmitter.emit('uploadUpdate');
             });
             Upload.eventEmitter.emit('uploadUpdate');

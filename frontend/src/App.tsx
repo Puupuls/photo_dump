@@ -1,11 +1,10 @@
-import React, {useEffect, useMemo, useState} from 'react';
-import {CssBaseline, CssVarsProvider} from "@mui/material";
+import React, {useEffect, useMemo} from 'react';
+import {CssBaseline, Experimental_CssVarsProvider as CssVarsProvider} from "@mui/material";
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import LoginPage from "./pages/auth/login";
-import {createTheme, defaultUiConfig, useUiConfig} from "./theme";
+import {createTheme, useUiConfig} from "./theme";
 import MainPage from "./pages/site/site";
 import {Session} from "./controllers/Sessions";
-import UiConfig from "./models/uiConfig";
 
 function App() {
 
@@ -16,7 +15,7 @@ function App() {
     }
   }, []);
 
-  const {uiConfig, setUiConfig} = useUiConfig();
+  const {uiConfig} = useUiConfig();
   useEffect(() => {
     window.document.title = uiConfig.appName;
   }, [uiConfig.appName]);
