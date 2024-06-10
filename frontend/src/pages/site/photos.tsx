@@ -3,18 +3,17 @@ import React, {useEffect, useState} from "react";
 import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
 import { JustifiedGrid } from "@egjs/react-grid";
-import {Photo} from "../../models/photos";
+import {File} from "../../models/file";
 let initialized = false;
 export const PhotosPage = () => {
     const [isDragging, setIsDragging] = useState(false);
-    const [photos, setPhotos] = useState<Photo[]>([]);
+    const [files, setFiles] = useState<File[]>([]);
     const areUploadsComplete = useIsAllUploadsComplete();
 
     useEffect(() => {
         if(areUploadsComplete || !initialized) {
-            api.get('/photos/').then((response) => {
-                console.log(response.data);
-                setPhotos(response.data);
+            api.get('/files/').then((response) => {
+                setFiles(response.data);
             })
             initialized = true;
         }
@@ -58,22 +57,31 @@ export const PhotosPage = () => {
     >
         <JustifiedGrid
             gap={5}
+            columnRange={[1, 10]}
             defaultDirection={"end"}
             align={"justify"}
             autoResize={true}
-            isConstantSize={true}
+            resizeDebounce={10}
+            displayedRow={-1}
+            sizeRange={[150,1000]}
         >
-            {photos.map((photo, index) => (
-                <Box key={index} sx={{width: photo.width, height: photo.height, overflow: 'hidden', borderRadius: 2, position: 'relative'}}>
+            {files.map((file, index) => (
+                <Box key={file.uuid} sx={{width: file.width, height: file.height, overflow: 'hidden', borderRadius: 2, position: 'relative'}}>
+                    {file.file_type === 'video'? <video
+                        key={file.uuid}
+                        data-grid-lazy="true"
+                        src={baseURL + '/files/file/' + file.uuid}
+                        style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                        onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                        onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
+                    /> :
                     <img
-                        key={photo.uuid}
                         data-grid-lazy="true"
                         loading="lazy"
-                        src={baseURL + '/photos/file/' + photo.uuid}
-                        alt={photo.filename_original}
-                        title={photo.date_taken}
+                        src={baseURL + '/files/file/' + file.uuid}
+                        alt={file.filename_original}
                         style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                    />
+                    />}
                 </Box>
             ))}
         </JustifiedGrid>

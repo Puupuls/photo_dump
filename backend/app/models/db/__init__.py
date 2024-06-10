@@ -1,4 +1,4 @@
 from .user import User
-from .photo import Photo
+from .file import File
 from .album import Album
-from .album_photo import AlbumPhoto
+from .album_file import AlbumFile

@@ -63,7 +63,7 @@ export class Upload {
             formData.append('file', nextTask.file);
             formData.append('modified_timestamp', nextTask.file.lastModified.toString());
 
-            api.put('/photos/', formData, {
+            api.put('/files/', formData, {
                 onUploadProgress: (progressEvent) => {
                     nextTask.progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total??1));
                     Upload.eventEmitter.emit('uploadUpdate');
@@ -107,7 +107,7 @@ export class Upload {
             if (!files[i].type.startsWith('image/') && !files[i].type.startsWith('video/')) {
                 this.upload_tasks.push({
                     file: files[i],
-                    progress: 0,
+                    progress: 100,
                     error: 'Invalid file type',
                     status: 'complete'
                 } as UploadTask);
@@ -117,16 +117,16 @@ export class Upload {
             if (files[i].size > 1024 * 1024 * 1024) {
                 this.upload_tasks.push({
                     file: files[i],
-                    progress: 0,
+                    progress: 100,
                     error: 'File too large',
                     status: 'complete'
                 } as UploadTask);
                 continue;
             }
-            if (files[i].size < 1024 * 10) {
+            if (files[i].size < 1024) {
                 this.upload_tasks.push({
                     file: files[i],
-                    progress: 0,
+                    progress: 100,
                     error: 'File too small',
                     status: 'complete'
                 } as UploadTask);

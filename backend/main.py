@@ -1,4 +1,3 @@
-import inspect
 import logging
 import sys
 from contextlib import asynccontextmanager
@@ -13,7 +12,7 @@ from sqlmodel import select, Session
 
 from app.deps import get_url, engine
 from app.models.db import User
-from app.routes.photos import Photos
+from app.routes.files import Files
 from app.routes.sessions import Sessions
 from app.routes.users import Users
 
@@ -128,7 +127,7 @@ app.add_middleware(
 
 app.include_router(Sessions.router)
 app.include_router(Users.router)
-app.include_router(Photos.router)
+app.include_router(Files.router)
 
 
 @app.middleware("http")

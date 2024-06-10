@@ -2,10 +2,13 @@ import os
 from datetime import datetime
 from enum import Enum
 from uuid import uuid4, UUID
-from PIL import Image, ExifTags
+from PIL import Image
 from exif import Image as ExifImage
 import cv2
 import mimetypes
+from xml.dom import minidom
+
+from loguru import logger
 from sqlmodel import Field, SQLModel
 
 mimetypes.init()
@@ -13,15 +16,16 @@ SUPPORTED_FILE_TYPES = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg",
                         "webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]
 
 
-class PhotoType(str, Enum):
-    photo = "photo"
+class FileType(str, Enum):
+    file = "file"
     video = "video"
 
 
-class Photo(SQLModel, table=True):
+class File(SQLModel, table=True):
     id: int = Field(default_factory=None, primary_key=True, index=True, unique=True, nullable=False)
     uuid: UUID = Field(index=True, unique=True, default_factory=uuid4)
     filename_original: str = Field()
+    file_type: FileType = Field()
     mimetype: str = Field()
     uploader_id: int = Field(foreign_key="user.id")
     creator_id: int = Field(foreign_key="user.id")
@@ -34,7 +38,7 @@ class Photo(SQLModel, table=True):
     height: int = Field(default=0)
     date_taken: datetime = Field(default=None, nullable=True)
 
-    def get_file_type(self):
+    def get_file_extension(self):
         extension = mimetypes.guess_extension(self.mimetype)
         if extension is None:
             extension = self.filename_original.split(".")[-1]
@@ -42,7 +46,8 @@ class Photo(SQLModel, table=True):
 
     @staticmethod
     def get_file_dir() -> str:
-        return "photos"
+        os.makedirs("files", exist_ok=True)
+        return "files"
 
     def get_file_path(self) -> str:
         """
@@ -50,29 +55,43 @@ class Photo(SQLModel, table=True):
         creates file path from uuid and file type
         :return: file path as string
         """
-        os.makedirs("photos", exist_ok=True)
-        return f"{Photo.get_file_dir()}/{self.uuid.hex}.{self.get_file_type()}"
+        return f"{File.get_file_dir()}/{self.uuid.hex}.{self.get_file_extension()}"
 
     def update_metadata(self) -> None:
         """
-        Updates photo metadata from exif data
+        Updates file metadata from exif data
         """
         file_path = self.get_file_path()
         # Check exif for images
-        if self.get_file_type() in ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]:
+        if self.get_file_extension() in ["jpg", "jpeg", "png", "gif", "webp", "bmp"]:
+            self.file_type = FileType.file
             image = Image.open(file_path)
             self.width = image.width
             self.height = image.height
-            e_image = ExifImage(file_path)
-            if e_image:
-                if e_image.get('datetime_original'):
-                    self.date_taken = datetime.strptime(e_image.datetime_original, "%Y:%m:%d %H:%M:%S")
-                elif e_image.get('datetime_digitized'):
-                    self.date_taken = datetime.strptime(e_image.datetime_digitized, "%Y:%m:%d %H:%M:%S")
-
+            try:
+                e_image = ExifImage(file_path)
+                if e_image.has_exif:
+                    if e_image.get('datetime_original', None):
+                        self.date_taken = datetime.strptime(e_image.datetime_original, "%Y:%m:%d %H:%M:%S")
+                    elif e_image.get('datetime_digitized', None):
+                        self.date_taken = datetime.strptime(e_image.datetime_digitized, "%Y:%m:%d %H:%M:%S")
+            except Exception as e:
+                logger.error(f"Error reading exif data: {e}")
+        elif self.get_file_extension() == "svg":
+            self.file_type = FileType.file
+            try:
+                with open(file_path, "r") as f:
+                    svg = minidom.parse(f)
+                    width = svg.getElementsByTagName("svg")[0].getAttribute("width")
+                    height = svg.getElementsByTagName("svg")[0].getAttribute("height")
+                    self.width = int(width.replace("px", ""))
+                    self.height = int(height.replace("px", ""))
+            except Exception as e:
+                logger.error(f"Error reading svg data: {e}")
 
         # Get video dimensions
-        if self.get_file_type() in ["webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]:
+        elif self.get_file_extension() in ["webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]:
+            self.file_type = FileType.video
             cap = cv2.VideoCapture(file_path)
             self.width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

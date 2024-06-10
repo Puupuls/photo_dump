@@ -1,6 +1,6 @@
 export type UploadTask = {
     file: File;
     progress: number;
-    error: string;
+    error: string | object;
     status: 'queued' | 'uploading' | 'complete';
 }
