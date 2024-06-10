@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, Form, File as fFile
 from sqlmodel import select
+from starlette.requests import Request
 from starlette.responses import FileResponse
 
 from app.deps import get_db
@@ -81,7 +82,7 @@ class Files:
         if existing_file:
             raise HTTPException(status_code=409, detail="File already exists")
         else:
-            if dbFile.get_file_extension() not in SUPPORTED_FILE_TYPES:
+            if dbFile.file_extension not in SUPPORTED_FILE_TYPES:
                 raise HTTPException(status_code=415, detail="Unsupported file type")
 
             dbFile.update_metadata()
@@ -94,7 +95,9 @@ class Files:
     @router.get('/file/{file_uuid}')
     async def get_file_file(
             file_uuid: str,
-            session=Depends(get_db)
+            download: bool = False,
+            session=Depends(get_db),
+            request=Request
     ):
         file = session.exec(select(File).where(File.uuid == UUID(file_uuid))).first()
 
@@ -102,4 +105,13 @@ class Files:
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="File not found")
 
-        return FileResponse(file_path)
+        resp = FileResponse(
+            file_path,
+            content_disposition_type="attachment" if download else "inline",
+            filename=file.filename_original,
+            headers={
+                "Content-Type": file.mimetype,
+                "Last-Modified": file.created_at.isoformat(),
+            }
+        )
+        return resp

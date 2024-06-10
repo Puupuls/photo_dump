@@ -1,14 +1,15 @@
+import mimetypes
 import os
 from datetime import datetime
 from enum import Enum
 from uuid import uuid4, UUID
-from PIL import Image
-from exif import Image as ExifImage
-import cv2
-import mimetypes
 from xml.dom import minidom
 
+import cv2
+from PIL import Image
+from exif import Image as ExifImage
 from loguru import logger
+from pydantic import computed_field
 from sqlmodel import Field, SQLModel
 
 mimetypes.init()
@@ -38,7 +39,12 @@ class File(SQLModel, table=True):
     height: int = Field(default=0)
     date_taken: datetime = Field(default=None, nullable=True)
 
-    def get_file_extension(self):
+    @computed_field
+    def src(self) -> str:
+        return f"/files/file/{self.uuid.hex}"
+
+    @computed_field
+    def file_extension(self) -> str:
         extension = mimetypes.guess_extension(self.mimetype)
         if extension is None:
             extension = self.filename_original.split(".")[-1]
@@ -55,7 +61,7 @@ class File(SQLModel, table=True):
         creates file path from uuid and file type
         :return: file path as string
         """
-        return f"{File.get_file_dir()}/{self.uuid.hex}.{self.get_file_extension()}"
+        return f"{File.get_file_dir()}/{self.uuid.hex}.{self.file_extension}"
 
     def update_metadata(self) -> None:
         """
@@ -63,7 +69,7 @@ class File(SQLModel, table=True):
         """
         file_path = self.get_file_path()
         # Check exif for images
-        if self.get_file_extension() in ["jpg", "jpeg", "png", "gif", "webp", "bmp"]:
+        if self.file_extension in ["jpg", "jpeg", "png", "gif", "webp", "bmp"]:
             self.file_type = FileType.file
             image = Image.open(file_path)
             self.width = image.width
@@ -77,7 +83,7 @@ class File(SQLModel, table=True):
                         self.date_taken = datetime.strptime(e_image.datetime_digitized, "%Y:%m:%d %H:%M:%S")
             except Exception as e:
                 logger.error(f"Error reading exif data: {e}")
-        elif self.get_file_extension() == "svg":
+        elif self.file_extension == "svg":
             self.file_type = FileType.file
             try:
                 with open(file_path, "r") as f:
@@ -90,7 +96,7 @@ class File(SQLModel, table=True):
                 logger.error(f"Error reading svg data: {e}")
 
         # Get video dimensions
-        elif self.get_file_extension() in ["webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]:
+        elif self.file_extension in ["webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]:
             self.file_type = FileType.video
             cap = cv2.VideoCapture(file_path)
             self.width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

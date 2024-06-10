@@ -9,4 +9,6 @@ export type File = {
     uuid: string;
     id: number;
     mimetype: string;
+    src: string;
+    file_extension: string;
 }

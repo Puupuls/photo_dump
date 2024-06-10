@@ -10,7 +10,7 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] Login
 - [X] Image upload
 - [X] Image grid
-- [ ] Image detail view
+- [X] Image detail view
 - [ ] User management
 - [ ] Albums
 - [ ] Grid update to group by date and load only in-view images
@@ -22,5 +22,6 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [ ] Image/Album delete
 - [ ] Theme support
 - [ ] Configurable UI/branding
+- [ ] Image staring
 - [ ] Search
 - [ ] Tests

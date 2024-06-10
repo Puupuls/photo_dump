@@ -33,7 +33,7 @@ import {
 } from "@mui/icons-material";
 import {Session} from "../../controllers/Sessions";
 import {Upload, useUploadStatus} from "../../controllers/Upload";
-import {UploadTasks} from "./components/UploadTasks";
+import {UploadTasks} from "./components/uploadTasks";
 
 
 function MainPage() {
