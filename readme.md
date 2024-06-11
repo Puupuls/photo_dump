@@ -11,7 +11,10 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] Image upload
 - [X] Image grid
 - [X] Image detail view
+- [ ] Image metadata
 - [ ] User management
+- [ ] Image select
+- [ ] Image delete
 - [ ] Albums
 - [ ] Grid update to group by date and load only in-view images
 - [ ] Update image upload to check hash before upload
@@ -19,7 +22,6 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [ ] Image date correction
 - [ ] Image/Album sharing & custom URLs
 - [ ] Image/Album download
-- [ ] Image/Album delete
 - [ ] Theme support
 - [ ] Configurable UI/branding
 - [ ] Image staring

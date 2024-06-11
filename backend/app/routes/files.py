@@ -36,7 +36,7 @@ class Files:
         files = session.exec(
             select(File)
             .where(File.deleted_at == None)
-            .order_by(File.date_taken.desc())
+            .order_by(File.timeline_date.desc())
         ).all()
         return files
 
@@ -44,7 +44,7 @@ class Files:
     @router.put(
         "/",
         response_model=File,
-        response_model_exclude={"id", "uploader_id", "creator_id"}
+        response_model_exclude={"id", "uploader_id", "creator_id", 'meta'}
     )
     async def upload_file(
             file: Annotated[UploadFile, fFile()],
@@ -92,7 +92,9 @@ class Files:
             return dbFile
 
     @staticmethod
-    @router.get('/file/{file_uuid}')
+    @router.get(
+        '/file/{file_uuid}'
+    )
     async def get_file_file(
             file_uuid: str,
             download: bool = False,

@@ -3,7 +3,8 @@ import React, {ReactNode, useEffect, useState} from "react";
 import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
 import {JustifiedGrid} from "@egjs/react-grid";
-import {File} from "../../models/file";
+import {File as FileType} from "../../models/file";
+import {File} from "./components/file";
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import Lightbox from "yet-another-react-lightbox";
@@ -21,7 +22,7 @@ export const PhotosPage = () => {
     const [isLightboxOpen, setAdvancedExampleOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isInfoOpen, setInfoOpen] = useState(false);
-    const [files, setFiles] = useState<File[]>([]);
+    const [files, setFiles] = useState<FileType[]>([]);
     const areUploadsComplete = useIsAllUploadsComplete();
 
     useEffect(() => {
@@ -79,32 +80,15 @@ export const PhotosPage = () => {
             displayedRow={-1}
             sizeRange={[150,1000]}
         >
-            {files.map((file, index) => (
-                <Box
-                    key={file.uuid}
-                    sx={{width: file.width, height: file.height, overflow: 'hidden', borderRadius: 2, position: 'relative', cursor: 'pointer'}}
+            {files.map((f, index) => (
+                <File
+                    file={f}
+                    key={f.uuid}
                     onClick={() => {
-                        setAdvancedExampleOpen(true);
                         setLightboxIndex(index);
+                        setAdvancedExampleOpen(true);
                     }}
-                >
-                    {file.file_type === 'video'? <video
-                            key={file.uuid}
-                            data-grid-lazy="true"
-                            muted={true}
-                            src={baseURL + file.src}
-                            style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                            onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                            onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
-                        /> :
-                        <img
-                            data-grid-lazy="true"
-                            loading="lazy"
-                            src={baseURL + file.src}
-                            alt={file.filename_original}
-                            style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                        />}
-                </Box>
+                />
             ))}
         </JustifiedGrid>
         <Lightbox
@@ -179,13 +163,21 @@ export const PhotosPage = () => {
                 top: 0,
                 right: 0,
                 bottom: 0,
-                width: 300,
+                width: 360,
                 zIndex: 10000,
+                overflowY: 'auto',
+                overflowX: 'hidden',
             }}>
                 <Toolbar>
                     <CloseOutlinedIcon onClick={() => setInfoOpen(false)} sx={{cursor: 'pointer', mr: 2}}/>
                     <Typography variant={"h6"}>Info</Typography>
                 </Toolbar>
+                {files[lightboxIndex].meta_dict && Object.keys(files[lightboxIndex].meta_dict).map((key) => (
+                    <Box key={key} sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
+                        <Typography variant={"body1"} fontWeight={700}>{key}</Typography>:&nbsp;
+                        <Typography variant={"body2"}>{files[lightboxIndex].meta_dict[key]}</Typography>
+                    </Box>
+                ))}
             </Paper>
             <style>{`
                 .yarl__root {
