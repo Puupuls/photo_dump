@@ -3,7 +3,7 @@ import React, {ReactNode, useEffect, useState} from "react";
 import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
 import {JustifiedGrid} from "@egjs/react-grid";
-import {File as FileType} from "../../models/file";
+import {FileType} from "../../models/fileType";
 import {File} from "./components/file";
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
@@ -14,6 +14,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Download from "yet-another-react-lightbox/plugins/download";
+import {UserType} from "../../models/userType";
 
 
 let initialized = false;
@@ -23,10 +24,14 @@ export const PhotosPage = () => {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isInfoOpen, setInfoOpen] = useState(false);
     const [files, setFiles] = useState<FileType[]>([]);
+    const [users, setUsers] = useState<UserType[]>([]);
     const areUploadsComplete = useIsAllUploadsComplete();
 
     useEffect(() => {
         if(areUploadsComplete || !initialized) {
+            api.get('/users/').then((response) => {
+                setUsers(response.data);
+            })
             api.get('/files/').then((response) => {
                 setFiles(response.data);
             })
@@ -172,6 +177,15 @@ export const PhotosPage = () => {
                     <CloseOutlinedIcon onClick={() => setInfoOpen(false)} sx={{cursor: 'pointer', mr: 2}}/>
                     <Typography variant={"h6"}>Info</Typography>
                 </Toolbar>
+                <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
+                    <Typography variant={"body1"} fontWeight={700}>Uploaded by</Typography>:&nbsp;
+                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].uploader_id)?.username}</Typography>
+                </Box>
+                <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
+                    <Typography variant={"body1"} fontWeight={700}>Created by</Typography>:&nbsp;
+                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].creator_id)?.username}</Typography>
+                </Box>
+                <br/>
                 {files[lightboxIndex].meta_dict && Object.keys(files[lightboxIndex].meta_dict).map((key) => (
                     <Box key={key} sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
                         <Typography variant={"body1"} fontWeight={700}>{key}</Typography>:&nbsp;

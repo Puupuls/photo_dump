@@ -1,7 +1,7 @@
 // UploadTasks.tsx
 import {Box, LinearProgress, Tooltip, Typography} from '@mui/material';
 import React, {useMemo} from "react";
-import {File as FileType} from "../../../models/file";
+import {FileType as FileType} from "../../../models/fileType";
 import {baseURL} from "../../../controllers/API";
 
 export const File = ({
