@@ -19,10 +19,10 @@ import {
 } from '@mui/material';
 import InsertPhotoOutlinedIcon from '@mui/icons-material/InsertPhotoOutlined';
 import PhotoAlbumOutlinedIcon from '@mui/icons-material/PhotoAlbumOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import {NavLink, Route, Routes, useNavigate} from "react-router-dom";
 import {useUiConfig} from "../../theme";
-import {PhotosPage} from './photos';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import {PhotosPage} from './photosPage';
 import {
     AccountCircleOutlined,
     Brightness2Outlined,
@@ -34,9 +34,12 @@ import {
 import {Session} from "../../controllers/Sessions";
 import {Upload, useUploadStatus} from "../../controllers/Upload";
 import {UploadTasks} from "./components/uploadTasks";
+import {UsersPage} from "./usersPage";
+import {UserPage} from "./userPage";
 
 
 function MainPage() {
+    const navigate = useNavigate();
     const { mode, setMode } = useColorScheme();
     const {uiConfig, setUiConfig} = useUiConfig();
     const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -105,6 +108,12 @@ function MainPage() {
                             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         >
+                            <MenuItem onClick={()=>navigate('/users')}>
+                                <ListItemIcon>
+                                    <GroupOutlinedIcon fontSize={"small"}/>
+                                </ListItemIcon>
+                                Users
+                            </MenuItem>
                             <MenuItem onClick={()=>setMode(mode=='dark'? 'light' : 'dark')}>
                                 <ListItemIcon>
                                     {mode=='dark'?  <WbSunnyOutlined fontSize={"small"}/> : <Brightness2Outlined fontSize={"small"}/>}
@@ -172,6 +181,9 @@ function MainPage() {
                     <Toolbar /> {/* This offsets the height of the AppBar */}
                     <Routes>
                         <Route path="/" element={<PhotosPage/>} />
+                        <Route path="/albums" element={<Typography>Albums</Typography>} />
+                        <Route path="/users" element={<UsersPage/>} />
+                        <Route path="/user/:userId" element={<UserPage/>} />
                     </Routes>
                     <UploadTasks/>
                 </Box>

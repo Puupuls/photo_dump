@@ -11,8 +11,8 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] Image upload
 - [X] Image grid
 - [X] Image detail view
-- [ ] Image metadata
-- [ ] User management
+- [X] Image metadata
+- [X] User management
 - [ ] Image select
 - [ ] Image delete
 - [ ] Albums

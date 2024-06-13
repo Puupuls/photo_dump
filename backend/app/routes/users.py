@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlmodel import select
 
 from app.deps import get_db
+from app.models.api.user_create_request import UserCreateRequest
+from app.models.api.user_update_request import UserUpdateRequest
 from app.models.db import User
 from app.routes.sessions import Sessions
 
@@ -32,6 +34,7 @@ class Users:
         response_model_exclude={
             "hashed_password",
             "is_admin",
+            "uuid",
         }
     )
     async def list_users(
@@ -42,3 +45,76 @@ class Users:
             select(User)
         ).all()
         return users
+
+    @staticmethod
+    @router.get(
+        "/{user_id}",
+        response_model=User,
+        response_model_exclude={
+            "hashed_password",
+            "is_admin",
+            "uuid",
+        }
+    )
+    async def read_user(
+            user_id: int,
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        user = session.exec(
+            select(User)
+            .where(User.id == user_id)
+        ).first()
+        return user
+
+    @staticmethod
+    @router.post(
+        "/",
+        response_model=User,
+        response_model_exclude={
+            "hashed_password",
+            "is_admin",
+            "uuid",
+        }
+    )
+    async def create_user(
+            user: UserCreateRequest,
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        user = User(
+            username=user.username,
+            email=user.email,
+            hashed_password=User.get_password_hash(user.password)
+        )
+        session.add(user)
+        session.commit()
+        return user
+
+    @staticmethod
+    @router.put(
+        "/{user_id}",
+        response_model=User,
+        response_model_exclude={
+            "hashed_password",
+            "is_admin",
+            "uuid",
+        }
+    )
+    async def update_user(
+            user_id: int,
+            user_data: UserUpdateRequest,
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        user = session.exec(
+            select(User)
+            .where(User.id == user_id)
+        ).first()
+        user.username = user_data.username
+        user.email = user_data.email
+        if user_data.password:
+            user.hashed_password = User.get_password_hash(user_data.password)
+        session.add(user)
+        session.commit()
+        return user

@@ -40,6 +40,9 @@ class Sessions:
         response = LoginResponse(
             token=Sessions.generate_token(user)
         )
+        user.last_login = datetime.utcnow()
+        session.add(user)
+        session.commit()
         return response
 
     @staticmethod
