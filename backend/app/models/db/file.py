@@ -12,14 +12,11 @@ from loguru import logger
 from pydantic import computed_field
 from sqlmodel import Field, SQLModel, Relationship
 
+from app.models.enums.enumFileType import FileType
+
 mimetypes.init()
 SUPPORTED_FILE_TYPES = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg",
                         "webm", "mp4", "mov", "avi", "mkv", "mpg", "mpeg"]
-
-
-class FileType(str, Enum):
-    file = "file"
-    video = "video"
 
 
 class File(SQLModel, table=True):

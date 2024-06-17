@@ -1,5 +1,5 @@
 import {Box, Paper, Portal, Toolbar, Typography} from "@mui/material";
-import React, {ReactNode, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
 import {JustifiedGrid} from "@egjs/react-grid";
@@ -15,6 +15,8 @@ import "yet-another-react-lightbox/styles.css";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Download from "yet-another-react-lightbox/plugins/download";
 import {UserType} from "../../models/userType";
+import {Session, useUser} from "../../controllers/Sessions";
+import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
 
 
 let initialized = false;
@@ -26,6 +28,7 @@ export const PhotosPage = () => {
     const [files, setFiles] = useState<FileType[]>([]);
     const [users, setUsers] = useState<UserType[]>([]);
     const areUploadsComplete = useIsAllUploadsComplete();
+    const user = useUser();
 
     useEffect(() => {
         if(areUploadsComplete || !initialized) {
@@ -55,7 +58,9 @@ export const PhotosPage = () => {
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        setIsDragging(!isLightboxOpen);
+        if(UserRoleUtil.to_int(user?.role??UserRole.VIEWER)>=UserRoleUtil.to_int(UserRole.EDITOR)) {
+            setIsDragging(!isLightboxOpen);
+        }
     };
 
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {

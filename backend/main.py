@@ -12,6 +12,7 @@ from sqlmodel import select, Session
 
 from app.deps import get_url, engine
 from app.models.db import User, File
+from app.models.enums.enumUserRole import UserRole
 from app.routes.files import Files
 from app.routes.sessions import Sessions
 from app.routes.users import Users
@@ -101,7 +102,7 @@ async def lifespan(app_: FastAPI):
                 username="admin",
                 email="admin@admin.admin",
                 hashed_password=User.get_password_hash("admin"),
-                is_admin=True
+                role=UserRole.ADMIN
             )
             session.add(user)
             session.commit()

@@ -1,8 +1,12 @@
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { api } from './API';
+import {UserType} from "../models/userType";
+import {useEffect, useState} from "react";
+import {UserRole} from "../models/userRoleEnum";
 
 export class Session {
   static _instance: Session;
+  _user: any;
 
   static get instance() {
     if (!this._instance) {
@@ -41,18 +45,36 @@ export class Session {
     delete api.defaults.headers.common['Authorization'];
   }
 
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<UserType|null> {
     try {
       if (!localStorage.getItem('token')) {
         return null;
       }
-      const response = await api.get('/users/me');
-      return response.data;
+      if(this._user) {
+        return this._user;
+      } else {
+        const response = await api.get('/users/me');
+        this._user = response.data;
+        return response.data;
+      }
     } catch (error) {
       console.error('Error getting current user', error);
       throw error;
     }
   }
+}
+
+export const useUser = () => {
+  const [user, setUser] = useState<UserType>()
+  useEffect(() => {
+    Session.instance.getCurrentUser().then((user) => {
+      if(user) {
+        user.role = UserRole[user.role as string as keyof typeof UserRole] as UserRole;
+        setUser(user)
+      }
+    });
+  }, []);
+  return user;
 }
 
 export default new Session();

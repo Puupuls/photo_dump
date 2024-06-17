@@ -3,7 +3,10 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from passlib.context import CryptContext
+from sqlalchemy import Column, Enum, String
 from sqlmodel import SQLModel, Field
+
+from app.models.enums.enumUserRole import UserRole
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -14,10 +17,11 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str = Field()
-    is_admin: bool = Field(default=False)
     last_login: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     modified_at: datetime = Field(default_factory=datetime.utcnow)
+    disabled_at: Optional[datetime] = None
+    role: UserRole = Field(default=UserRole.VIEWER, sa_column=Column(String()))
 
     def authenticate_user(self, plain_password: str):
         return pwd_context.verify(plain_password, self.hashed_password)

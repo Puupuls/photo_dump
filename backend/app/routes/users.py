@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -20,7 +21,10 @@ class Users:
     @router.get(
         "/me",
         response_model=User,
-        response_model_exclude={"password_hash", "id"}
+        response_model_exclude={
+            "hashed_password",
+            "uuid"
+        }
     )
     async def read_users_me(
             current_user: Annotated[User, Depends(Sessions.get_current_user)],
@@ -33,7 +37,6 @@ class Users:
         response_model=list[User],
         response_model_exclude={
             "hashed_password",
-            "is_admin",
             "uuid",
         }
     )
@@ -42,7 +45,9 @@ class Users:
             session=Depends(get_db)
     ):
         users = session.exec(
-            select(User)
+            select(User).order_by(
+                User.username
+            )
         ).all()
         return users
 
@@ -52,7 +57,6 @@ class Users:
         response_model=User,
         response_model_exclude={
             "hashed_password",
-            "is_admin",
             "uuid",
         }
     )
@@ -73,7 +77,6 @@ class Users:
         response_model=User,
         response_model_exclude={
             "hashed_password",
-            "is_admin",
             "uuid",
         }
     )
@@ -87,6 +90,12 @@ class Users:
             email=user.email,
             hashed_password=User.get_password_hash(user.password)
         )
+        existing_user = session.exec(
+            select(User)
+            .where(User.username == user.username)
+        ).first()
+        if existing_user:
+            raise ValueError("User already exists")
         session.add(user)
         session.commit()
         return user
@@ -97,7 +106,6 @@ class Users:
         response_model=User,
         response_model_exclude={
             "hashed_password",
-            "is_admin",
             "uuid",
         }
     )
@@ -113,8 +121,35 @@ class Users:
         ).first()
         user.username = user_data.username
         user.email = user_data.email
+        user.role = user_data.role
         if user_data.password:
             user.hashed_password = User.get_password_hash(user_data.password)
         session.add(user)
         session.commit()
         return user
+
+    @staticmethod
+    @router.delete(
+        "/{user_id}",
+        name="Disable or re-enable user",
+        description="Disable or re-enable user access to system"
+    )
+    async def disable_user(
+            user_id: int,
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        user = session.exec(
+            select(User)
+            .where(User.id == user_id)
+        ).first()
+        is_disabled = user.disabled_at is not None
+        if user.disabled_at:
+            user.disabled_at = None
+        else:
+            user.disabled_at = datetime.utcnow()
+        session.add(user)
+        session.commit()
+        return {
+            "message": "User deleted" if not is_disabled else "User restored"
+        }

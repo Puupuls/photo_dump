@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import InvalidTokenError
 from loguru import logger
-from sqlmodel import select, Session, or_
+from sqlmodel import select, Session, or_, and_
 from starlette import status
 
 from app.deps import get_db, engine
@@ -30,7 +30,17 @@ class Sessions:
     @staticmethod
     @router.post("/login")
     async def login(data: LoginRequest, session=Depends(get_db)) -> LoginResponse:
-        user = session.exec(select(User).where(or_(User.username == data.username, User.email == data.username))).first()
+        user = session.exec(
+            select(User).where(
+                and_(
+                    or_(
+                        User.username == data.username,
+                        User.email == data.username
+                    ),
+                    User.disabled_at == None
+                )
+            )
+        ).first()
         if not user:
             raise HTTPException(status_code=400, detail="Incorrect username or password")
 

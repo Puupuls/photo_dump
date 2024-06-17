@@ -25,6 +25,7 @@ export const UsersPage = () => {
                         <TableCell>Role</TableCell>
                         <TableCell>Last login at</TableCell>
                         <TableCell>Invited at</TableCell>
+                        <TableCell>Disabled?</TableCell>
                         <TableCell>
                             <Button variant={"contained"} size={'small'} color={'secondary'} onClick={()=>navigate(`/user/new`)}>Invite</Button>
                         </TableCell>
@@ -40,9 +41,10 @@ export const UsersPage = () => {
                                 {user.username}
                             </TableCell>
                             <TableCell>{user.email}</TableCell>
-                            <TableCell></TableCell>
+                            <TableCell>{user.role}</TableCell>
                             <TableCell>{user.last_login? new Date(user.last_login + "+00:00").toLocaleString() : "Never"}</TableCell>
                             <TableCell>{new Date(user.created_at + "+00:00").toLocaleString()}</TableCell>
+                            <TableCell>{user.disabled_at? "Yes" : "No"}</TableCell>
                             <TableCell>
                                 <Button variant={"outlined"} size={'small'} color={'secondary'} onClick={()=>navigate(`/user/${user.id}`)}>Edit</Button>
                             </TableCell>

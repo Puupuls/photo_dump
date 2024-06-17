@@ -31,11 +31,12 @@ import {
     LogoutOutlined,
     WbSunnyOutlined
 } from "@mui/icons-material";
-import {Session} from "../../controllers/Sessions";
+import {Session, useUser} from "../../controllers/Sessions";
 import {Upload, useUploadStatus} from "../../controllers/Upload";
 import {UploadTasks} from "./components/uploadTasks";
 import {UsersPage} from "./usersPage";
 import {UserPage} from "./userPage";
+import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
 
 
 function MainPage() {
@@ -45,7 +46,7 @@ function MainPage() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const mobile = useMediaQuery('@media (max-width: 600px)');
     const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
-
+    const user = useUser();
 
     return (
         <Grid container direction={'column'} style={{ height: '100vh' }} flex={1}>
@@ -108,12 +109,14 @@ function MainPage() {
                             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         >
-                            <MenuItem onClick={()=>navigate('/users')}>
-                                <ListItemIcon>
-                                    <GroupOutlinedIcon fontSize={"small"}/>
-                                </ListItemIcon>
-                                Users
-                            </MenuItem>
+                            {user && UserRoleUtil.to_int(user.role) >= UserRoleUtil.to_int(UserRole.ADMIN) && (
+                                <MenuItem onClick={()=>navigate('/users')}>
+                                    <ListItemIcon>
+                                        <GroupOutlinedIcon fontSize={"small"}/>
+                                    </ListItemIcon>
+                                    Users
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={()=>setMode(mode=='dark'? 'light' : 'dark')}>
                                 <ListItemIcon>
                                     {mode=='dark'?  <WbSunnyOutlined fontSize={"small"}/> : <Brightness2Outlined fontSize={"small"}/>}
