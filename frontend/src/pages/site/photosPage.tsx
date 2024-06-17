@@ -27,6 +27,8 @@ export const PhotosPage = () => {
     const [isInfoOpen, setInfoOpen] = useState(false);
     const [files, setFiles] = useState<FileType[]>([]);
     const [users, setUsers] = useState<UserType[]>([]);
+    const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+    const [lastSelectedIndex, setLastSelectedIndex] = useState<number>(-1);
     const areUploadsComplete = useIsAllUploadsComplete();
     const user = useUser();
 
@@ -98,6 +100,16 @@ export const PhotosPage = () => {
                         setLightboxIndex(index);
                         setAdvancedExampleOpen(true);
                     }}
+                    isSelected={selectedIndexes.includes(index)}
+                    onSelect={() => {
+                        if (selectedIndexes.includes(index)) {
+                            setSelectedIndexes(selectedIndexes.filter(it => it !== index));
+                        } else {
+                            setSelectedIndexes([...selectedIndexes, index]);
+                        }
+                        setLastSelectedIndex(index);
+                    }}
+                    isSelecting={selectedIndexes.length > 0}
                 />
             ))}
         </JustifiedGrid>
