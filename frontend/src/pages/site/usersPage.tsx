@@ -20,7 +20,7 @@ export const UsersPage = () => {
                     backgroundColor: theme.palette.primary.dark,
                 })}>
                     <TableRow>
-                        <TableCell>Username</TableCell>
+                        <TableCell>Name</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Role</TableCell>
                         <TableCell>Last login at</TableCell>
@@ -38,7 +38,7 @@ export const UsersPage = () => {
                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
                             <TableCell component="th" scope="row">
-                                {user.username}
+                                {user.name}
                             </TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>{user.role}</TableCell>

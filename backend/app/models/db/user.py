@@ -14,7 +14,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class User(SQLModel, table=True):
     id: int = Field(default_factory=None, primary_key=True, index=True, unique=True, nullable=False)
     uuid: UUID = Field(default_factory=uuid4, index=True, unique=True)  # Used for JWT, not sent to frontend
-    username: str = Field(unique=True, index=True)
+    name: Optional[str] = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str = Field()
     last_login: Optional[datetime] = None

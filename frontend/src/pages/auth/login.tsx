@@ -16,7 +16,7 @@ function LoginPage() {
       await Session.instance.login(username, password);
       window.location.href = '/';
     } catch (error) {
-      setError('Failed to log in. Please check your username and password.');
+      setError('Failed to log in. Please check your email and password.');
     }
     setIsLoading(false);
   };
@@ -29,10 +29,10 @@ function LoginPage() {
               <Grid container direction="column" gap={1}>
                 <Typography variant="h5">Login</Typography>
                 <TextField
-                    type="text"
-                    placeholder="Username"
+                    type="email"
+                    placeholder="Email"
                     fullWidth
-                    name="username"
+                    name="email"
                     variant="outlined"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}

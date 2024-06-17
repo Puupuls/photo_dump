@@ -26,9 +26,9 @@ export class Session {
     return localStorage.getItem('token');
   }
 
-  async login(username: string, password: string) {
+  async login(email: string, password: string) {
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const response = await api.post('/auth/login', { email, password });
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;

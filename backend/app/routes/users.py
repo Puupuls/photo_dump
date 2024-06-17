@@ -8,6 +8,7 @@ from app.deps import get_db
 from app.models.api.user_create_request import UserCreateRequest
 from app.models.api.user_update_request import UserUpdateRequest
 from app.models.db import User
+from app.models.enums.enumUserRole import UserRole
 from app.routes.sessions import Sessions
 
 
@@ -46,7 +47,7 @@ class Users:
     ):
         users = session.exec(
             select(User).order_by(
-                User.username
+                User.name
             )
         ).all()
         return users
@@ -81,18 +82,19 @@ class Users:
         }
     )
     async def create_user(
-            user: UserCreateRequest,
+            user_request: UserCreateRequest,
             current_user: Annotated[User, Depends(Sessions.get_current_user)],
             session=Depends(get_db)
     ):
         user = User(
-            username=user.username,
-            email=user.email,
-            hashed_password=User.get_password_hash(user.password)
+            name=user_request.name,
+            email=user_request.email,
+            role=UserRole[user_request.role],
+            hashed_password=User.get_password_hash(user_request.password)
         )
         existing_user = session.exec(
             select(User)
-            .where(User.username == user.username)
+            .where(User.email == user.email)
         ).first()
         if existing_user:
             raise ValueError("User already exists")
@@ -119,7 +121,7 @@ class Users:
             select(User)
             .where(User.id == user_id)
         ).first()
-        user.username = user_data.username
+        user.name = user_data.name
         user.email = user_data.email
         user.role = user_data.role
         if user_data.password:

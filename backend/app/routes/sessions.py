@@ -34,18 +34,17 @@ class Sessions:
             select(User).where(
                 and_(
                     or_(
-                        User.username == data.username,
-                        User.email == data.username
+                        User.email == data.email
                     ),
                     User.disabled_at == None
                 )
             )
         ).first()
         if not user:
-            raise HTTPException(status_code=400, detail="Incorrect username or password")
+            raise HTTPException(status_code=400, detail="Incorrect email or password")
 
         if not user.authenticate_user(data.password):
-            raise HTTPException(status_code=400, detail="Incorrect username or password")
+            raise HTTPException(status_code=400, detail="Incorrect email or password")
 
         response = LoginResponse(
             token=Sessions.generate_token(user)
@@ -96,6 +95,6 @@ class Sessions:
                 detail="Could not validate credentials",
             )
         else:
-            logger.info(f"User {user.username} authenticated")
+            logger.info(f"User {user.email} authenticated")
 
         return user

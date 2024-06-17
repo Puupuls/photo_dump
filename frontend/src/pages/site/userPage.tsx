@@ -32,7 +32,7 @@ export const UserPage = () => {
 
     const onSave = () => {
         let data = {
-            username: user.username,
+            name: user.name,
             email: user.email,
             role: user.role,
             password: password
@@ -57,7 +57,7 @@ export const UserPage = () => {
     return <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%'}}>
         <Paper sx={{p:2, mb:10, width: 360}}>
             <Typography variant={'h4'} sx={{mb: 3}}>User {!!user.disabled_at && "(Disabled)"}</Typography>
-            <TextField required label="Username" value={user?.username??""} fullWidth sx={{mb:2}} onChange={(e)=>setUser({...user, username: e.target.value})}/>
+            <TextField required label="Name" value={user?.name??""} fullWidth sx={{mb:2}} onChange={(e)=>setUser({...user, name: e.target.value})}/>
             <TextField required label="Email" value={user?.email??""} fullWidth sx={{mb:2}} type={'email'} onChange={(e)=>setUser({...user, email: e.target.value})}/>
 
             <FormControl fullWidth sx={{mb:2}}>

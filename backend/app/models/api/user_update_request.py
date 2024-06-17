@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class UserUpdateRequest(BaseModel):
-    username: str
+    name: str
     email: str
     role: str
     password: Optional[str]

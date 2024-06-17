@@ -99,7 +99,7 @@ async def lifespan(app_: FastAPI):
         if not any_user:
             logger.info("Creating default user...")
             user = User(
-                username="admin",
+                name="admin",
                 email="admin@admin.admin",
                 hashed_password=User.get_password_hash("admin"),
                 role=UserRole.ADMIN

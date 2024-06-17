@@ -184,11 +184,11 @@ export const PhotosPage = () => {
                 </Toolbar>
                 <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
                     <Typography variant={"body1"} fontWeight={700}>Uploaded by</Typography>:&nbsp;
-                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].uploader_id)?.username}</Typography>
+                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].uploader_id)?.name}</Typography>
                 </Box>
                 <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
                     <Typography variant={"body1"} fontWeight={700}>Created by</Typography>:&nbsp;
-                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].creator_id)?.username}</Typography>
+                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].creator_id)?.name}</Typography>
                 </Box>
                 <br/>
                 {files[lightboxIndex].meta_dict && Object.keys(files[lightboxIndex].meta_dict).map((key) => (

@@ -2,7 +2,7 @@ import {UserRole} from "./userRoleEnum";
 
 export type UserType = {
     id: number;
-    username: string;
+    name: string;
     email: string;
     last_login: string;
     created_at: string;

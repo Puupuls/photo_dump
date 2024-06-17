@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class UserCreateRequest(BaseModel):
-    username: str
+    name: str
     email: str
+    role: str
     password: str
