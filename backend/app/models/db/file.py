@@ -27,7 +27,6 @@ class File(SQLModel, table=True):
     mimetype: str = Field()
     uploader_id: int = Field(foreign_key="user.id")
     creator_id: int = Field(foreign_key="user.id")
-    deleted_at: datetime = Field(default=None, nullable=True)
     hash: str = Field()
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -46,7 +45,7 @@ class File(SQLModel, table=True):
 
     @computed_field
     def src(self) -> str:
-        return f"/files/file/{self.uuid.hex}"
+        return f"/files/{self.uuid.hex}"
 
     @computed_field
     def file_extension(self) -> str:

@@ -4,7 +4,10 @@ from uuid import UUID, uuid4
 
 from passlib.context import CryptContext
 from sqlalchemy import Column, Enum, String
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped
 from sqlmodel import SQLModel, Field
+from sqlalchemy_utils import ChoiceType
 
 from app.models.enums.enumUserRole import UserRole
 
@@ -21,7 +24,15 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     modified_at: datetime = Field(default_factory=datetime.utcnow)
     disabled_at: Optional[datetime] = None
-    role: UserRole = Field(default=UserRole.VIEWER, sa_column=Column(String()))
+    role: UserRole = Field(
+        default=UserRole.VIEWER,
+        sa_column=Column(
+            ChoiceType(
+                UserRole,
+                impl=String()
+            )
+        )
+    )
 
     def authenticate_user(self, plain_password: str):
         return pwd_context.verify(plain_password, self.hashed_password)

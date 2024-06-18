@@ -12,8 +12,9 @@ from starlette.requests import Request
 from starlette.responses import FileResponse
 
 from app.deps import get_db
-from app.models.db import User, File
+from app.models.db import User, File, AlbumFile
 from app.models.db.file import SUPPORTED_FILE_TYPES
+from app.models.enums.enumUserRole import UserRole
 from app.routes.sessions import Sessions
 
 
@@ -35,7 +36,6 @@ class Files:
     ):
         files = session.exec(
             select(File)
-            .where(File.deleted_at == None)
             .order_by(File.timeline_date.desc())
         ).all()
         return files
@@ -52,6 +52,9 @@ class Files:
             modified_timestamp: Annotated[int, Form()] = None,
             session=Depends(get_db)
     ):
+        if current_user.role.to_int() < UserRole.EDITOR.to_int():
+            raise HTTPException(status_code=403, detail="Permission denied")
+
         if modified_timestamp is None:
             modified_timestamp = datetime.now().timestamp()
         else:
@@ -66,6 +69,9 @@ class Files:
         dst = Path(dbFile.get_file_path())
         with dst.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
+        # TODO: Sanitize svg files, removing js to prevent XSS
+        if dbFile.file_extension == "svg":
+            pass
         os.utime(dst, (modified_timestamp, modified_timestamp))
 
         hash = hashlib.blake2b()
@@ -77,7 +83,6 @@ class Files:
         existing_file = session.exec(
             select(File)
             .where(File.hash == dbFile.hash)
-            .where(File.deleted_at == None)
         ).first()
         if existing_file:
             raise HTTPException(status_code=409, detail="File already exists")
@@ -93,7 +98,7 @@ class Files:
 
     @staticmethod
     @router.get(
-        '/file/{file_uuid}'
+        '/{file_uuid}'
     )
     async def get_file_file(
             file_uuid: str,
@@ -117,3 +122,83 @@ class Files:
             }
         )
         return resp
+
+    @staticmethod
+    @router.delete(
+        '/{file_uuid}'
+    )
+    async def delete_file(
+            file_uuid: str,
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        if current_user.role.to_int() < UserRole.EDITOR.to_int():
+            raise HTTPException(status_code=403, detail="Permission denied")
+
+        file = session.exec(select(File).where(File.uuid == UUID(file_uuid))).first()
+        if current_user.role.to_int() < UserRole.ADMIN.to_int():
+            if file.creator_id != current_user.id or file.uploader_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Permission denied")
+        if not file:
+            raise HTTPException(status_code=404, detail="File not found")
+        metadata = file.meta
+        for meta in metadata:
+            session.delete(meta)
+        albums = session.exec(select(AlbumFile).where(AlbumFile.file_id == file.id)).all()
+        for album in albums:
+            session.delete(album)
+        session.delete(file)
+        os.remove(file.get_file_path())
+        session.commit()
+        return {
+            "status": "success",
+            "message": "File deleted"
+        }
+
+    @staticmethod
+    @router.delete(
+        '/',
+    )
+    async def delete_files(
+            files: list[str],
+            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            session=Depends(get_db)
+    ):
+        if current_user.role.to_int() < UserRole.EDITOR.to_int():
+            raise HTTPException(status_code=403, detail="Permission denied")
+
+        permission_error = set()
+        file_error = set()
+        generic_error = set()
+
+        for file_uuid in files:
+            try:
+                file = session.exec(select(File).where(File.uuid == UUID(file_uuid))).first()
+
+                if not file:
+                    file_error.add(file_uuid)
+                    continue
+                if current_user.role.to_int() < UserRole.ADMIN.to_int():
+                    if file.creator_id != current_user.id or file.uploader_id != current_user.id:
+                        permission_error.add(file_uuid)
+                        continue
+                metadata = file.meta
+                for meta in metadata:
+                    session.delete(meta)
+                albums = session.exec(select(AlbumFile).where(AlbumFile.file_id == file.id)).all()
+                for album in albums:
+                    session.delete(album)
+                session.delete(file)
+                session.commit()
+                os.remove(file.get_file_path())
+
+            except Exception as e:
+                print(e)
+                generic_error.add(file_uuid)
+
+        return {
+            "message": "Files deleted",
+            "permission_missing_for": permission_error,
+            "files_not_found": file_error,
+            "generic_error": generic_error
+        }

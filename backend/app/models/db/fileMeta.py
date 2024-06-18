@@ -7,4 +7,4 @@ class FileMeta(SQLModel, table=True):
     value: str = Field()
 
     file_id: int = Field(foreign_key="file.id")
-    file: list["File"] = Relationship(back_populates="meta")
+    file: list["File"] = Relationship(back_populates="meta", sa_relationship_kwargs={"cascade": "all, delete"})

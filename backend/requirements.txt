@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 sqlmodel
+sqlalchemy-utils
 alembic
 psycopg2-binary
 python-jose[cryptography]

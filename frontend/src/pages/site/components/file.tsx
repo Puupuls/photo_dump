@@ -64,7 +64,7 @@ export const File = ({
             }}
         >
             <Tooltip title={isSelected ? 'Deselect' : 'Select'}>
-                {isSelected? <CheckCircleOutlinedIcon/> : <CircleOutlinedIcon/>}
+                <CheckCircleOutlinedIcon sx={{opacity: isSelected? 1: 0.5}}/>
             </Tooltip>
         </IconButton>
         {file.file_type === 'video'? <video

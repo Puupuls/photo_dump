@@ -1,4 +1,4 @@
-import {Box, Paper, Portal, Toolbar, Typography} from "@mui/material";
+import {Box, IconButton, Paper, Portal, Toolbar, Tooltip, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
@@ -17,6 +17,11 @@ import Download from "yet-another-react-lightbox/plugins/download";
 import {UserType} from "../../models/userType";
 import {Session, useUser} from "../../controllers/Sessions";
 import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
+import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import TrashOutlinedIcon from '@mui/icons-material/DeleteOutline';
 
 
 let initialized = false;
@@ -74,15 +79,70 @@ export const PhotosPage = () => {
         e.preventDefault();
     };
 
+    const deleteSingleFile = (index: number) => {
+        api.delete(`/files/${files[index].uuid}/`).then(() => {
+            setFiles(files.filter((_, i) => i !== index));
+            setSelectedIndexes(selectedIndexes.filter(it => it !== index));
+        });
+    }
+
+    const deleteSelectedFiles = () => {
+        api.delete(`/files/`, {data: selectedIndexes.map(it => files[it].uuid)}).then(() => {
+            setFiles(files.filter((_, i) => !selectedIndexes.includes(i)));
+            setSelectedIndexes([]);
+        });
+    }
+
 
     return <Box
-        sx={{padding: 2, flex: 1}}
+        sx={{paddingX: 2, flex: 1}}
         onDrop={handleDrop}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
     >
+        {selectedIndexes.length > 0 && <Toolbar
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                zIndex: 1201,
+                minWidth: '360px'
+            }}
+        >
+            <Typography variant={"h6"}>{selectedIndexes.length} selected</Typography>
+            <Box sx={{flex: 1}}/>
+            <IconButton onClick={() => setSelectedIndexes([])}>
+                <Tooltip title={"Download selected"}>
+                    <DownloadOutlinedIcon/>
+                </Tooltip>
+            </IconButton>
+            {UserRoleUtil.to_int(user?.role??UserRole.VIEWER)>=UserRoleUtil.to_int(UserRole.EDITOR) && <>
+                <IconButton onClick={() => setSelectedIndexes([])}>
+                    <Tooltip title={"Add selected to album"}>
+                        <AddOutlinedIcon/>
+                    </Tooltip>
+                </IconButton>
+                <IconButton onClick={() => deleteSelectedFiles()}>
+                    <Tooltip title={"Delete selected"}>
+                        <DeleteOutlinedIcon/>
+                    </Tooltip>
+                </IconButton>
+                <IconButton onClick={() => setSelectedIndexes([])}>
+                    <Tooltip title={"Clear selection"}>
+                        <ClearOutlinedIcon/>
+                    </Tooltip>
+                </IconButton>
+            </>}
+        </Toolbar>}
         <JustifiedGrid
+            style={{
+                marginTop: 12,
+                minHeight: '70vh',
+        }}
             gap={5}
             columnRange={[1, 10]}
             defaultDirection={"end"}
@@ -143,7 +203,14 @@ export const PhotosPage = () => {
                 buttons: [
                     "download",
                     <button type="button" aria-label="Info" className={"yarl__button"}>
-                        <InfoOutlinedIcon onClick={() => setInfoOpen(!isInfoOpen)}/>
+                        <Tooltip title={"Delete"}>
+                            <TrashOutlinedIcon onClick={() => deleteSingleFile(lightboxIndex)}/>
+                        </Tooltip>
+                    </button>,
+                    <button type="button" aria-label="Info" className={"yarl__button"}>
+                        <Tooltip title={"Info"}>
+                            <InfoOutlinedIcon onClick={() => setInfoOpen(!isInfoOpen)}/>
+                        </Tooltip>
                     </button>,
                     "slideshow",
                     "fullscreen",
