@@ -1,6 +1,6 @@
 // UploadTasks.tsx
 import {Box, IconButton, Tooltip} from '@mui/material';
-import React from "react";
+import React, {BaseSyntheticEvent} from "react";
 import {FileType as FileType} from "../../../models/fileType";
 import {baseURL} from "../../../controllers/API";
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -15,7 +15,7 @@ export const File = ({
     file:FileType,
     onClick?:()=>void,
     isSelected?:boolean,
-    onSelect?:()=>void,
+    onSelect?:(e: BaseSyntheticEvent<MouseEvent>)=>void,
     isSelecting?:boolean
 }) => {
     // const src = useMemo(() => URL.createObjectURL(file.file), [task.file])
@@ -59,7 +59,7 @@ export const File = ({
             }}
             onClick={(e)=>{
                 e.stopPropagation();
-                onSelect?.();
+                onSelect?.(e);
             }}
         >
             <Tooltip title={isSelected ? 'Deselect' : 'Select'}>

@@ -178,11 +178,21 @@ export const PhotosPage = () => {
                         setAdvancedExampleOpen(true);
                     }}
                     isSelected={selectedIndexes.includes(index)}
-                    onSelect={() => {
+                    onSelect={(e) => {
                         if (selectedIndexes.includes(index)) {
                             setSelectedIndexes(selectedIndexes.filter(it => it !== index));
+                            //@ts-ignore
+                            if(e.shiftKey && lastSelectedIndex !== -1) {
+                                setSelectedIndexes(
+                                    selectedIndexes.filter(it => it < index || it > lastSelectedIndex)
+                                );
+                            }
                         } else {
-                            setSelectedIndexes([...selectedIndexes, index]);
+                            //@ts-ignore
+                            if (e.shiftKey && lastSelectedIndex !== -1) {
+                                setSelectedIndexes([...selectedIndexes, ...Array.from({length: Math.abs(index - lastSelectedIndex)}, (_, i) => Math.min(index, lastSelectedIndex) + i)]);
+                            }
+                            setSelectedIndexes((val) => [...val, index]);
                         }
                         setLastSelectedIndex(index);
                     }}
