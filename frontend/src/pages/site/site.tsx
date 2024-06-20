@@ -2,7 +2,7 @@ import React from 'react';
 import {
     AppBar,
     Avatar,
-    Box, Button,
+    Box,
     Grid,
     IconButton,
     List,
@@ -12,7 +12,8 @@ import {
     Menu,
     MenuItem,
     SwipeableDrawer,
-    Toolbar, Tooltip,
+    Toolbar,
+    Tooltip,
     Typography,
     useColorScheme,
     useMediaQuery
@@ -26,13 +27,12 @@ import {PhotosPage} from './photosPage';
 import {
     AccountCircleOutlined,
     Brightness2Outlined,
-    CloudUpload,
     CloudUploadOutlined,
     LogoutOutlined,
     WbSunnyOutlined
 } from "@mui/icons-material";
 import {Session, useUser} from "../../controllers/Sessions";
-import {Upload, useUploadStatus} from "../../controllers/Upload";
+import {Upload} from "../../controllers/Upload";
 import {UploadTasks} from "./components/uploadTasks";
 import {UsersPage} from "./usersPage";
 import {UserPage} from "./userPage";

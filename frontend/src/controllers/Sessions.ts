@@ -1,5 +1,4 @@
-import { useLocalStorage } from '@uidotdev/usehooks';
-import { api } from './API';
+import {api} from './API';
 import {UserType} from "../models/userType";
 import {useEffect, useState} from "react";
 import {UserRole} from "../models/userRoleEnum";

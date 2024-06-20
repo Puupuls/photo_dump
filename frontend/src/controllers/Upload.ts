@@ -1,6 +1,7 @@
 import {UploadTask} from "../models/uploadTask";
 import {api} from "./API";
 import React from "react";
+
 const { EventEmitter } = require("events");
 
 const MAX_CONCURRENT_UPLOADS = 2;

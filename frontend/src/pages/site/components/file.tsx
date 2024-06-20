@@ -1,10 +1,9 @@
 // UploadTasks.tsx
-import {Box, IconButton, LinearProgress, Tooltip, Typography} from '@mui/material';
-import React, {useMemo} from "react";
+import {Box, IconButton, Tooltip} from '@mui/material';
+import React from "react";
 import {FileType as FileType} from "../../../models/fileType";
 import {baseURL} from "../../../controllers/API";
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 
 export const File = ({
                          file,

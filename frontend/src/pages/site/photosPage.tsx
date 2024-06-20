@@ -15,7 +15,7 @@ import "yet-another-react-lightbox/styles.css";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Download from "yet-another-react-lightbox/plugins/download";
 import {UserType} from "../../models/userType";
-import {Session, useUser} from "../../controllers/Sessions";
+import {useUser} from "../../controllers/Sessions";
 import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';

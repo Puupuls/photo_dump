@@ -1,18 +1,7 @@
 import {useEffect, useState} from "react";
 import {UserType} from "../../models/userType";
 import {api} from "../../controllers/API";
-import {
-    Box,
-    Button, FormControl, Input, InputLabel, MenuItem,
-    Paper, Select,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow, TextField,
-    Typography
-} from "@mui/material";
+import {Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography} from "@mui/material";
 import {useNavigate, useParams} from "react-router-dom";
 import {UserRole} from "../../models/userRoleEnum";
 

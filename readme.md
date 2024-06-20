@@ -13,8 +13,8 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] Image detail view
 - [X] Image metadata
 - [X] User management
-- [ ] Image select
-- [ ] Image delete
+- [X] Image select
+- [X] Image delete
 - [ ] Albums
 - [ ] Grid update to group by date and load only in-view images
 - [ ] Update image upload to check hash before upload
