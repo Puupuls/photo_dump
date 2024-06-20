@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 import jwt
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import InvalidTokenError
 from loguru import logger
@@ -61,12 +61,14 @@ class Sessions:
         return jwt.encode(to_encode, os.environ.get('SECRET_KEY'), algorithm=ALGORITHM)
 
     @staticmethod
-    async def get_current_user(token: Annotated[HTTPAuthorizationCredentials, Depends(bearer)]):
+    async def get_current_user(
+            token: Annotated[HTTPAuthorizationCredentials, Depends(bearer)] = None
+    ):
         if token is None:
             logger.error("Missing token")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing token",
+                detail="Missing token.",
             )
         try:
             payload = jwt.decode(token.credentials, os.environ.get('SECRET_KEY'), algorithms=[ALGORITHM])

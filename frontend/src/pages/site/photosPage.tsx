@@ -93,6 +93,23 @@ export const PhotosPage = () => {
         });
     }
 
+    const downloadSelectedFiles = () => {
+        api.post(
+            `/files/download/`,
+            {
+                files: selectedIndexes.map(it => files[it].uuid)
+            },
+            {responseType: 'blob'},
+        ).then((response) => {
+            const url = window.URL.createObjectURL(response.data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'files';
+            a.click();
+        })
+        setSelectedIndexes([]);
+    }
+
 
     return <Box
         sx={{paddingX: 2, flex: 1}}
@@ -115,7 +132,7 @@ export const PhotosPage = () => {
         >
             <Typography variant={"h6"}>{selectedIndexes.length} selected</Typography>
             <Box sx={{flex: 1}}/>
-            <IconButton onClick={() => setSelectedIndexes([])}>
+            <IconButton onClick={() => downloadSelectedFiles()}>
                 <Tooltip title={"Download selected"}>
                     <DownloadOutlinedIcon/>
                 </Tooltip>
@@ -142,7 +159,7 @@ export const PhotosPage = () => {
             style={{
                 marginTop: 12,
                 minHeight: '70vh',
-        }}
+            }}
             gap={5}
             columnRange={[1, 10]}
             defaultDirection={"end"}

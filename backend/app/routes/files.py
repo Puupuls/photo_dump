@@ -1,6 +1,8 @@
 import hashlib
+import io
 import os
 import shutil
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
@@ -8,10 +10,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, Form, File as fFile
 from sqlmodel import select
-from starlette.requests import Request
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 from app.deps import get_db
+from app.models.api.files_download_request import FilesDownloadRequest
 from app.models.db import User, File, AlbumFile
 from app.models.db.file import SUPPORTED_FILE_TYPES
 from app.models.enums.enumUserRole import UserRole
@@ -23,6 +25,46 @@ class Files:
         prefix="/files",
         tags=["files"],
     )
+
+    @staticmethod
+    @router.post(
+        '/download'
+    )
+    async def get_files_file(
+            data: FilesDownloadRequest,
+            session=Depends(get_db),
+    ):
+        files = session.exec(select(File).where(File.uuid.in_(data.files))).all()
+        file_paths = [file.get_file_path() for file in files]
+        for file_path in file_paths:
+            if not os.path.exists(file_path):
+                raise HTTPException(status_code=404, detail="File not found")
+        if len(file_paths) == 1:
+            return FileResponse(
+                file_paths[0],
+                content_disposition_type="attachment",
+                filename=files[0].filename_original,
+                headers={
+                    "Content-Type": files[0].mimetype,
+                    "Last-Modified": files[0].created_at.isoformat(),
+                }
+            )
+        else:
+            zip_bytes_io = io.BytesIO()
+            with zipfile.ZipFile(zip_bytes_io, 'w', zipfile.ZIP_DEFLATED) as zipped:
+                for file in files:
+                    zipped.write(file.get_file_path(), file.filename_original)
+            zip_bytes_io.seek(0)
+            response = StreamingResponse(
+                iter([zip_bytes_io.getvalue()]),
+                media_type="application/x-zip-compressed",
+                headers={
+                    "Content-Disposition": f"attachment; filename=files.zip",
+                    "Content-Length": str(zip_bytes_io.getbuffer().nbytes)
+                }
+            )
+            zip_bytes_io.close()
+            return response
 
     @staticmethod
     @router.get(
@@ -104,7 +146,6 @@ class Files:
             file_uuid: str,
             download: bool = False,
             session=Depends(get_db),
-            request=Request
     ):
         file = session.exec(select(File).where(File.uuid == UUID(file_uuid))).first()
 
