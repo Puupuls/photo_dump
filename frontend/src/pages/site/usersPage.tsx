@@ -1,18 +1,12 @@
-import {useEffect, useState} from "react";
 import {UserType} from "../../models/userType";
-import {api} from "../../controllers/API";
 import {Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import {useNavigate} from "react-router-dom";
+import {useQuery} from "react-query";
 
 export const UsersPage = () => {
-    const [users, setUsers] = useState<UserType[]>([]);
+    const {data: users} = useQuery<UserType[]>('users');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        api.get('/users/').then((response) => {
-            setUsers(response.data);
-        })
-    }, []);
     return <Box sx={{p:2}}>
         <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
@@ -32,7 +26,7 @@ export const UsersPage = () => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {users.map((user) => (
+                    {users?.map((user) => (
                         <TableRow
                             key={user.id}
                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}

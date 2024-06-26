@@ -1,4 +1,4 @@
-import {experimental_extendTheme as extendTheme} from '@mui/material/styles';
+import {extendTheme} from '@mui/material/styles';
 import UiConfig from "./models/uiConfig";
 import * as colors from "@mui/material/colors";
 import React from "react";

@@ -20,20 +20,6 @@ class Users:
 
     @staticmethod
     @router.get(
-        "/me",
-        response_model=User,
-        response_model_exclude={
-            "hashed_password",
-            "uuid"
-        }
-    )
-    async def read_users_me(
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
-    ):
-        return current_user
-
-    @staticmethod
-    @router.get(
         "/",
         response_model=list[User],
         response_model_exclude={
@@ -42,7 +28,7 @@ class Users:
         }
     )
     async def list_users(
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            current_user: Annotated[User, Depends(Sessions.get_current_user())],
             session=Depends(get_db)
     ):
         users = session.exec(
@@ -51,26 +37,6 @@ class Users:
             )
         ).all()
         return users
-
-    @staticmethod
-    @router.get(
-        "/{user_id}",
-        response_model=User,
-        response_model_exclude={
-            "hashed_password",
-            "uuid",
-        }
-    )
-    async def read_user(
-            user_id: int,
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
-            session=Depends(get_db)
-    ):
-        user = session.exec(
-            select(User)
-            .where(User.id == user_id)
-        ).first()
-        return user
 
     @staticmethod
     @router.post(
@@ -83,7 +49,7 @@ class Users:
     )
     async def create_user(
             user_request: UserCreateRequest,
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            current_user: Annotated[User, Depends(Sessions.get_current_user(UserRole.ADMIN))],
             session=Depends(get_db)
     ):
         user = User(
@@ -103,6 +69,40 @@ class Users:
         return user
 
     @staticmethod
+    @router.get(
+        "/me",
+        response_model=User,
+        response_model_exclude={
+            "hashed_password",
+            "uuid"
+        }
+    )
+    async def read_users_me(
+            current_user: Annotated[User, Depends(Sessions.get_current_user())],
+    ):
+        return current_user
+
+    @staticmethod
+    @router.get(
+        "/{user_id}",
+        response_model=User,
+        response_model_exclude={
+            "hashed_password",
+            "uuid",
+        }
+    )
+    async def read_user(
+            user_id: int,
+            current_user: Annotated[User, Depends(Sessions.get_current_user())],
+            session=Depends(get_db)
+    ):
+        user = session.exec(
+            select(User)
+            .where(User.id == user_id)
+        ).first()
+        return user
+
+    @staticmethod
     @router.put(
         "/{user_id}",
         response_model=User,
@@ -114,7 +114,7 @@ class Users:
     async def update_user(
             user_id: int,
             user_data: UserUpdateRequest,
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            current_user: Annotated[User, Depends(Sessions.get_current_user(UserRole.ADMIN))],
             session=Depends(get_db)
     ):
         user = session.exec(
@@ -138,7 +138,7 @@ class Users:
     )
     async def disable_user(
             user_id: int,
-            current_user: Annotated[User, Depends(Sessions.get_current_user)],
+            current_user: Annotated[User, Depends(Sessions.get_current_user(UserRole.ADMIN))],
             session=Depends(get_db)
     ):
         user = session.exec(

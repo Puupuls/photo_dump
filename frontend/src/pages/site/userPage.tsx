@@ -4,20 +4,19 @@ import {api} from "../../controllers/API";
 import {Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography} from "@mui/material";
 import {useNavigate, useParams} from "react-router-dom";
 import {UserRole} from "../../models/userRoleEnum";
+import {useQuery} from "react-query";
 
 export const UserPage = () => {
     const navigate = useNavigate();
     let { userId } = useParams();
     const [user, setUser] = useState<UserType>({} as UserType);
     const [password, setPassword] = useState<string>('');
-
+    const {data: apiUser} = useQuery<UserType>(['users', userId]);
     useEffect(() => {
-        if(userId !== 'new' && userId !== undefined){
-            api.get(`/users/${userId}`).then((response) => {
-                setUser(response.data);
-            })
+        if(apiUser) {
+            setUser(apiUser);
         }
-    }, [userId]);
+    }, [apiUser]);
 
     const onSave = () => {
         let data = {

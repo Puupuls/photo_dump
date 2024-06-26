@@ -64,7 +64,7 @@ export class Upload {
             formData.append('file', nextTask.file);
             formData.append('modified_timestamp', nextTask.file.lastModified.toString());
 
-            api.put('/files/', formData, {
+            api.post('/files/', formData, {
                 onUploadProgress: (progressEvent) => {
                     nextTask.progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total??1));
                     Upload.eventEmitter.emit('uploadUpdate');

@@ -15,13 +15,13 @@ import "yet-another-react-lightbox/styles.css";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Download from "yet-another-react-lightbox/plugins/download";
 import {UserType} from "../../models/userType";
-import {useUser} from "../../controllers/Sessions";
 import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
 import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import TrashOutlinedIcon from '@mui/icons-material/DeleteOutline';
+import {useQuery} from "react-query";
 
 
 let initialized = false;
@@ -30,24 +30,15 @@ export const PhotosPage = () => {
     const [isLightboxOpen, setAdvancedExampleOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isInfoOpen, setInfoOpen] = useState(false);
-    const [files, setFiles] = useState<FileType[]>([]);
-    const [users, setUsers] = useState<UserType[]>([]);
     const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
     const [lastSelectedIndex, setLastSelectedIndex] = useState<number>(-1);
-    const areUploadsComplete = useIsAllUploadsComplete();
-    const user = useUser();
+    const {data: user} = useQuery<UserType>(['users/me'])
+    const {data: users} = useQuery<UserType[]>(['users'])
+    const {data: files} = useQuery<FileType[]>(['files'])
 
-    useEffect(() => {
-        if(areUploadsComplete || !initialized) {
-            api.get('/users/').then((response) => {
-                setUsers(response.data);
-            })
-            api.get('/files/').then((response) => {
-                setFiles(response.data);
-            })
-            initialized = true;
-        }
-    }, [areUploadsComplete]);
+    if(files === undefined){
+        return <Box>Loading...</Box>
+    }
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -81,14 +72,12 @@ export const PhotosPage = () => {
 
     const deleteSingleFile = (index: number) => {
         api.delete(`/files/${files[index].uuid}/`).then(() => {
-            setFiles(files.filter((_, i) => i !== index));
             setSelectedIndexes(selectedIndexes.filter(it => it !== index));
         });
     }
 
     const deleteSelectedFiles = () => {
         api.delete(`/files/`, {data: selectedIndexes.map(it => files[it].uuid)}).then(() => {
-            setFiles(files.filter((_, i) => !selectedIndexes.includes(i)));
             setSelectedIndexes([]);
         });
     }
@@ -109,7 +98,6 @@ export const PhotosPage = () => {
         })
         setSelectedIndexes([]);
     }
-
 
     return <Box
         sx={{paddingX: 2, flex: 1}}
@@ -169,7 +157,7 @@ export const PhotosPage = () => {
             displayedRow={-1}
             sizeRange={[150,1000]}
         >
-            {files.map((f, index) => (
+            {files?.map((f, index) => (
                 <File
                     file={f}
                     key={f.uuid}
@@ -204,7 +192,7 @@ export const PhotosPage = () => {
             open={isLightboxOpen}
             close={() => setAdvancedExampleOpen(false)}
             slides={
-                files.map((file) => ({
+                files?.map((file) => ({
                     ...file,
                     src: baseURL + file.src,
                     download: baseURL + file.src + '?download=1',
@@ -290,11 +278,11 @@ export const PhotosPage = () => {
                 </Toolbar>
                 <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
                     <Typography variant={"body1"} fontWeight={700}>Uploaded by</Typography>:&nbsp;
-                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].uploader_id)?.name}</Typography>
+                    <Typography variant={"body2"}>{users?.find(it=> it.id===files[lightboxIndex].uploader_id)?.name}</Typography>
                 </Box>
                 <Box sx={{display: 'flex', alignItems: 'center', mt:1, ml: 1, mr: 1}}>
                     <Typography variant={"body1"} fontWeight={700}>Created by</Typography>:&nbsp;
-                    <Typography variant={"body2"}>{users.find(it=> it.id===files[lightboxIndex].creator_id)?.name}</Typography>
+                    <Typography variant={"body2"}>{users?.find(it=> it.id===files[lightboxIndex].creator_id)?.name}</Typography>
                 </Box>
                 <br/>
                 {files[lightboxIndex].meta_dict && Object.keys(files[lightboxIndex].meta_dict).map((key) => (

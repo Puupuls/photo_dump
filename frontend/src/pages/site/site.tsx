@@ -21,7 +21,7 @@ import {
 import InsertPhotoOutlinedIcon from '@mui/icons-material/InsertPhotoOutlined';
 import PhotoAlbumOutlinedIcon from '@mui/icons-material/PhotoAlbumOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
-import {NavLink, Route, Routes, useNavigate} from "react-router-dom";
+import {Link, NavLink, Route, Routes, useNavigate} from "react-router-dom";
 import {useUiConfig} from "../../theme";
 import {PhotosPage} from './photosPage';
 import {
@@ -31,12 +31,14 @@ import {
     LogoutOutlined,
     WbSunnyOutlined
 } from "@mui/icons-material";
-import {Session, useUser} from "../../controllers/Sessions";
+import {Session} from "../../controllers/Sessions";
 import {Upload} from "../../controllers/Upload";
 import {UploadTasks} from "./components/uploadTasks";
 import {UsersPage} from "./usersPage";
 import {UserPage} from "./userPage";
 import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
+import {useQuery} from "react-query";
+import {UserType} from "../../models/userType";
 
 
 function MainPage() {
@@ -46,14 +48,16 @@ function MainPage() {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
     const mobile = useMediaQuery('@media (max-width: 600px)');
     const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
-    const user = useUser();
+    const {data: user} = useQuery<UserType>(['users/me'])
 
     return (
         <Grid container direction={'column'} style={{ height: '100vh' }} flex={1}>
             <AppBar sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar sx={{justifyContent: 'space-between', width: '100%'}}>
                     <Typography variant="h6">
-                        {uiConfig.appName}
+                        <Link to="/" style={{textDecoration: 'none', color: 'inherit'}}>
+                            {uiConfig.appName}
+                        </Link>
                     </Typography>
                     <Box>
                         <Tooltip title="Upload" sx={{mr:2}}>

@@ -18,7 +18,6 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [ ] Albums
 - [ ] Grid update to group by date and load only in-view images
 - [ ] Update image upload to check hash before upload
-- [ ] Update data fetching to use something caching like [react-query](https://tanstack.com/query/latest)
 - [ ] Image photographer and location tagging
 - [ ] Image date correction
 - [ ] Image/Album sharing & custom URLs

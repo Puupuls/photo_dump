@@ -5,6 +5,8 @@ import LoginPage from "./pages/auth/login";
 import {createTheme, useUiConfig} from "./theme";
 import MainPage from "./pages/site/site";
 import {Session} from "./controllers/Sessions";
+import {QueryClientProvider} from "react-query";
+import {queryClient} from "./controllers/API";
 
 function App() {
 
@@ -29,14 +31,16 @@ function App() {
         attribute={'class'}
     >
       <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-              path="/*"
-              element={<MainPage />} />
-        </Routes>
-      </Router>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+                path="/*"
+                element={<MainPage />} />
+          </Routes>
+        </Router>
+      </QueryClientProvider>
     </CssVarsProvider>
   );
 }
