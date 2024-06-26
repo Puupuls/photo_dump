@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+
 import jwt
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -9,9 +10,9 @@ from sqlmodel import select, Session, or_, and_
 from starlette import status
 
 from app.deps import get_db, engine
-from app.models.db import User
 from app.models.api.login_request import LoginRequest
 from app.models.api.login_response import LoginResponse
+from app.models.db import User
 from app.models.enums.enumUserRole import UserRole
 
 ALGORITHM = "HS256"

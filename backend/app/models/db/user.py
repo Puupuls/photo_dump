@@ -3,11 +3,9 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from passlib.context import CryptContext
-from sqlalchemy import Column, Enum, String
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped
-from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, String
 from sqlalchemy_utils import ChoiceType
+from sqlmodel import SQLModel, Field
 
 from app.models.enums.enumUserRole import UserRole
 

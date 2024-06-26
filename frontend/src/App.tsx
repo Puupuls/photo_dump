@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo} from 'react';
-import {CssBaseline, Experimental_CssVarsProvider as CssVarsProvider} from "@mui/material";
+import {CssBaseline, CssVarsProvider} from "@mui/material";
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import LoginPage from "./pages/auth/login";
 import {createTheme, useUiConfig} from "./theme";

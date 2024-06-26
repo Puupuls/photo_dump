@@ -1,6 +1,6 @@
 import {Box, IconButton, Paper, Portal, Toolbar, Tooltip, Typography} from "@mui/material";
-import React, {useEffect, useState} from "react";
-import {Upload, useIsAllUploadsComplete} from "../../controllers/Upload";
+import React, {useState} from "react";
+import {Upload} from "../../controllers/Upload";
 import {api, baseURL} from "../../controllers/API";
 import {JustifiedGrid} from "@egjs/react-grid";
 import {FileType} from "../../models/fileType";
