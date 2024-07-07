@@ -17,6 +17,7 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] Image delete
 - [ ] Albums
 - [ ] Grid update to group by date and load only in-view images
+- [ ] Better dockerisation to allow deployment of one app image not frontend and backend
 - [ ] Update image upload to check hash before upload
 - [ ] Image photographer and location tagging
 - [ ] Image date correction

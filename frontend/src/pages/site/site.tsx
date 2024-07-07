@@ -21,7 +21,7 @@ import {
 import InsertPhotoOutlinedIcon from '@mui/icons-material/InsertPhotoOutlined';
 import PhotoAlbumOutlinedIcon from '@mui/icons-material/PhotoAlbumOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
-import {Link, NavLink, Route, Routes, useNavigate} from "react-router-dom";
+import {Link, NavLink, Route, Routes, useNavigate, useParams} from "react-router-dom";
 import {useUiConfig} from "../../theme";
 import {PhotosPage} from './photosPage';
 import {
@@ -39,6 +39,8 @@ import {UserPage} from "./userPage";
 import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
 import {useQuery} from "react-query";
 import {UserType} from "../../models/userType";
+import { AlbumsPage } from './albumsPage';
+import {AlbumPage} from "./albumPage";
 
 
 function MainPage() {
@@ -49,6 +51,15 @@ function MainPage() {
     const mobile = useMediaQuery('@media (max-width: 600px)');
     const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
     const {data: user} = useQuery<UserType>(['users/me'])
+
+    const location = window.location.pathname;
+    let albumUUID: string|undefined = undefined;
+    if (location.includes('/albums/')) {
+        let parts = location.split('/');
+        if(parts.length > 1) {
+            albumUUID = parts[parts.length - 1];
+        }
+    }
 
     return (
         <Grid container direction={'column'} style={{ height: '100vh' }} flex={1}>
@@ -62,7 +73,7 @@ function MainPage() {
                     <Box>
                         <Tooltip title="Upload" sx={{mr:2}}>
                             <IconButton
-                                onClick={(e)=>Upload.instance.selectAndUpload()}
+                                onClick={(e)=>Upload.instance.selectAndUpload(albumUUID)}
                                 size="small"
                                 aria-controls={menuAnchor ? 'account-menu' : undefined}
                                 aria-haspopup="true"
@@ -188,9 +199,12 @@ function MainPage() {
                     <Toolbar /> {/* This offsets the height of the AppBar */}
                     <Routes>
                         <Route path="/" element={<PhotosPage/>} />
-                        <Route path="/albums" element={<Typography>Albums</Typography>} />
+                        <Route path="/albums" element={<AlbumsPage/>} />
+                        <Route path="/albums/:albumUUID" element={<AlbumPage/>} />
                         <Route path="/users" element={<UsersPage/>} />
                         <Route path="/user/:userId" element={<UserPage/>} />
+
+                        <Route path="*" element={<Box>404</Box>} />
                     </Routes>
                     <UploadTasks/>
                 </Box>

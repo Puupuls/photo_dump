@@ -1,46 +1,70 @@
-import {Box, IconButton, Paper, Portal, Toolbar, Tooltip, Typography} from "@mui/material";
-import React, {useState} from "react";
-import {Upload} from "../../controllers/Upload";
-import {api, baseURL} from "../../controllers/API";
-import {JustifiedGrid} from "@egjs/react-grid";
+import React, {useEffect, useState} from "react";
+import "yet-another-react-lightbox/styles.css";
+import {useQuery} from "react-query";
+import {AlbumType} from "../../models/albumType";
+import {useParams} from "react-router-dom";
 import {FileType} from "../../models/fileType";
 import {File} from "./components/file";
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import {Upload} from "../../controllers/Upload";
+import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
+import {api, baseURL} from "../../controllers/API";
+import {
+    Box,
+    IconButton,
+    Input,
+    InputAdornment,
+    Paper,
+    Portal,
+    TextField,
+    Toolbar,
+    Tooltip,
+    Typography
+} from "@mui/material";
+import {UserType} from "../../models/userType";
 import Lightbox from "yet-another-react-lightbox";
+import TrashOutlinedIcon from "@mui/icons-material/DeleteOutline";
+import InfoOutlinedIcon from "@mui/icons-material/Info";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Download from "yet-another-react-lightbox/plugins/download";
-import {UserType} from "../../models/userType";
-import {UserRole, UserRoleUtil} from "../../models/userRoleEnum";
-import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
-import TrashOutlinedIcon from '@mui/icons-material/DeleteOutline';
-import {useQuery} from "react-query";
-import {AlbumsSelector} from "./components/albumsSelector";
-import {AlbumType} from "../../models/albumType";
-import {useNavigate} from "react-router-dom";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import RemoveFromQueueOutlinedIcon from "@mui/icons-material/RemoveFromQueueOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
+import {JustifiedGrid} from "@egjs/react-grid";
 
 
+export const AlbumPage = () => {
+    const {albumUUID} = useParams<{albumUUID: string}>();
+    const {data: album, refetch: refreshAlbum} = useQuery<AlbumType>([`albums/${albumUUID}`]);
+    const {data: files} = useQuery<FileType[]>([`files/?album_uuid=${albumUUID}`]);
+    const {data: user} = useQuery<UserType>(['users/me'])
+    const {data: users} = useQuery<UserType[]>(['users'])
 
-let initialized = false;
-export const PhotosPage = () => {
-    const navigate = useNavigate();
+    const [isEditing, setIsEditing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isLightboxOpen, setAdvancedExampleOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isInfoOpen, setInfoOpen] = useState(false);
     const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
     const [lastSelectedIndex, setLastSelectedIndex] = useState<number>(-1);
-    const [isAlbumSelectOpen, setIsAlbumSelectOpen] = useState(false);
-    const {data: user} = useQuery<UserType>(['users/me'])
-    const {data: users} = useQuery<UserType[]>(['users'])
-    const {data: files} = useQuery<FileType[]>(['files'])
+    const [albumName, setAlbumName] = useState<string>(album?.name??'');
+
+    useEffect(() => {
+        if(album?.name == 'New album' || (album && !album?.name)){
+            if (UserRoleUtil.to_int(user?.role??UserRole.GUEST)>=UserRoleUtil.to_int(UserRole.EDITOR)) {
+                setIsEditing(true)
+            }
+        }else{
+            setAlbumName(album?.name??'')
+        }
+    }, [album]);
 
     if(files === undefined){
         return <Box>Loading...</Box>
@@ -56,7 +80,7 @@ export const PhotosPage = () => {
         if (files.length === 0) {
             return;
         }
-        Upload.instance.uploadFiles(files);
+        Upload.instance.uploadFiles(files, albumUUID);
         setIsDragging(false);
     }
 
@@ -105,24 +129,17 @@ export const PhotosPage = () => {
         setSelectedIndexes([]);
     }
 
-    const onAlbumSelect = async(album: AlbumType|null) => {
-        if(album){
-            let resp = await api.post(
-                `/albums/${album.uuid}/files`,
-                selectedIndexes.map(it => files[it].uuid)
-            )
-            navigate(`/albums/${album.uuid}`)
-        }else{
-            let resp = await api.post(
-                '/albums',
-                {
-                    name: 'New album',
-                    files: selectedIndexes.map(it => files[it].uuid)
-                }
-            )
-            let album = resp.data as AlbumType;
-            navigate(`/albums/${album.uuid}`)
-        }
+    const removeSelectedFiles = () => {
+
+    }
+
+    const onSaveName = () => {
+        api.put(`/albums/${albumUUID}`, {
+            name: document.getElementById('albumName')?.innerText
+        }).then(() => {
+            setIsEditing(false);
+            refreshAlbum();
+        })
     }
 
     return <Box
@@ -152,9 +169,9 @@ export const PhotosPage = () => {
                 </Tooltip>
             </IconButton>
             {UserRoleUtil.to_int(user?.role??UserRole.VIEWER)>=UserRoleUtil.to_int(UserRole.EDITOR) && <>
-                <IconButton onClick={() => setIsAlbumSelectOpen(true)}>
-                    <Tooltip title={"Add selected to album"}>
-                        <AddOutlinedIcon/>
+                <IconButton onClick={() => removeSelectedFiles()}>
+                    <Tooltip title={"Remove selected"}>
+                        <RemoveFromQueueOutlinedIcon/>
                     </Tooltip>
                 </IconButton>
                 <IconButton onClick={() => deleteSelectedFiles()}>
@@ -169,6 +186,31 @@ export const PhotosPage = () => {
                 </IconButton>
             </>}
         </Toolbar>}
+        <Typography variant={"h4"} sx={{
+            mt: 4, mb: 2, borderBottom: isEditing? '1px solid' : '', minWidth: 200, justifyContent: isEditing? 'space-between' : 'flex-start', display: 'flex'}}>
+            <Box
+                id={'albumName'}
+                sx={{
+                    display: 'flex',
+                    flex: isEditing? 1 : 'unset',
+                }}
+                contentEditable={isEditing}
+                onBlur={onSaveName}
+                onKeyDown={(e) => {
+                    if(e.key === 'Enter'){
+                        e.preventDefault();
+                        onSaveName();
+                    }
+                }}
+            >{album?.name}</Box>
+            {UserRoleUtil.to_int(user?.role??UserRole.GUEST)>=UserRoleUtil.to_int(UserRole.EDITOR)?
+                isEditing?
+                <IconButton onClick={onSaveName}><SaveOutlinedIcon/></IconButton>:
+                <IconButton onClick={()=>setIsEditing(true)}><EditOutlinedIcon/></IconButton>
+
+            :null}
+        </Typography>
+
         <JustifiedGrid
             style={{
                 marginTop: 12,
@@ -285,9 +327,6 @@ export const PhotosPage = () => {
                 Drop files here
             </Box>
         </Box>}
-        <AlbumsSelector
-            onSelect={onAlbumSelect}
-            onClose={()=>setIsAlbumSelectOpen(false)} isOpen={isAlbumSelectOpen}/>
         {isInfoOpen && isLightboxOpen && <Portal
             container={document.body}
         >

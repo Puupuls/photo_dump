@@ -13,6 +13,7 @@ from sqlmodel import select, Session
 from app.deps import get_url, engine
 from app.models.db import User, File
 from app.models.enums.enumUserRole import UserRole
+from app.routes.albums import Albums
 from app.routes.files import Files
 from app.routes.sessions import Sessions
 from app.routes.users import Users
@@ -109,15 +110,15 @@ async def lifespan(app_: FastAPI):
         else:
             logger.info("Users already exists")
 
-        try:
-            logger.info("Update metadata for files...")
-            files = session.exec(select(File)).all()
-            for file in files:
-                file.update_metadata()
-            session.commit()
-            logger.info("Metadata updated")
-        except Exception as e:
-            logger.error(f"Error updating metadata: {e}")
+        # try:
+        #     logger.info("Update metadata for files...")
+        #     files = session.exec(select(File)).all()
+        #     for file in files:
+        #         file.update_metadata()
+        #     session.commit()
+        #     logger.info("Metadata updated")
+        # except Exception as e:
+        #     logger.error(f"Error updating metadata: {e}")
 
     yield
 
@@ -139,6 +140,7 @@ app.add_middleware(
 app.include_router(Sessions.router)
 app.include_router(Users.router)
 app.include_router(Files.router)
+app.include_router(Albums.router)
 
 
 @app.middleware("http")

@@ -64,7 +64,8 @@ export class Upload {
             formData.append('file', nextTask.file);
             formData.append('modified_timestamp', nextTask.file.lastModified.toString());
 
-            api.post('/files/', formData, {
+            let url = nextTask.albumUuid? '/files/?album_uuid=' + nextTask.albumUuid : '/files/';
+            api.post(url, formData, {
                 onUploadProgress: (progressEvent) => {
                     nextTask.progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total??1));
                     Upload.eventEmitter.emit('uploadUpdate');
@@ -87,7 +88,7 @@ export class Upload {
         }, 1000);
     }
 
-    selectAndUpload() {
+    selectAndUpload(albumUuid: string|undefined=undefined) {
         // Open file selector, allow selecting images and videos
         const input = document.createElement('input');
         input.type = 'file';
@@ -96,13 +97,13 @@ export class Upload {
         input.onchange = (e) => {
             const files = (e.target as HTMLInputElement).files;
             if (files) {
-                this.uploadFiles(Array.from(files));
+                this.uploadFiles(Array.from(files), albumUuid);
             }
         }
         input.click();
     }
 
-    uploadFiles(files: File[]) {
+    uploadFiles(files: File[], albumUuid: string|undefined=undefined) {
         for (let i = 0; i < files.length; i++) {
             // Check mime types
             if (!files[i].type.startsWith('image/') && !files[i].type.startsWith('video/')) {
@@ -110,7 +111,8 @@ export class Upload {
                     file: files[i],
                     progress: 100,
                     error: 'Invalid file type',
-                    status: 'complete'
+                    status: 'complete',
+                    albumUuid: albumUuid
                 } as UploadTask);
                 continue;
             }
@@ -120,7 +122,8 @@ export class Upload {
                     file: files[i],
                     progress: 100,
                     error: 'File too large',
-                    status: 'complete'
+                    status: 'complete',
+                    albumUuid: albumUuid
                 } as UploadTask);
                 continue;
             }
@@ -129,7 +132,8 @@ export class Upload {
                     file: files[i],
                     progress: 100,
                     error: 'File too small',
-                    status: 'complete'
+                    status: 'complete',
+                    albumUuid: albumUuid
                 } as UploadTask);
                 continue;
             }
@@ -138,7 +142,8 @@ export class Upload {
                 file: files[i],
                 progress: 0,
                 error: '',
-                status: 'queued'
+                status: 'queued',
+                albumUuid: albumUuid
             } as UploadTask);
         }
         this.startLoop();

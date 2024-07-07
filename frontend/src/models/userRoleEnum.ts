@@ -3,6 +3,7 @@ export enum UserRole {
     ADMIN = 'admin',
     VIEWER = 'viewer',
     EDITOR = 'editor',
+    GUEST = 'guest'
 }
 
 export class UserRoleUtil {
@@ -18,6 +19,8 @@ export class UserRoleUtil {
                 return 5;
             case UserRole.VIEWER:
                 return 1;
+            case UserRole.GUEST:
+                return 0;
             default:
                 return -1;
         }

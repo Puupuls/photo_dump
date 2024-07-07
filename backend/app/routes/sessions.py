@@ -37,52 +37,64 @@ class Sessions:
     def get_current_user(
             role: UserRole = UserRole.VIEWER,
     ):
+        """
+        Gets function that retrieves user from the token in request and checks
+        if their permissions are at least the level of the role parameter.
+
+        If role == UserRole.GUEST Then missing token will not result in exception and will return user=None
+        :param role: Min required permission level
+        :return:
+        """
         async def check_cur_user(
             token: HTTPAuthorizationCredentials = Depends(bearer)
         ):
-            if token is None:
-                logger.error("Missing token")
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Missing token.",
-                )
             try:
-                payload = jwt.decode(token.credentials, os.environ.get('SECRET_KEY'), algorithms=[ALGORITHM])
-                uuid: str = payload.get("uuid")
-                if uuid is None:
-                    logger.error("Could not validate credentials")
+                if token is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Missing token.",
+                    )
+                try:
+                    payload = jwt.decode(token.credentials, os.environ.get('SECRET_KEY'), algorithms=[ALGORITHM])
+                    uuid: str = payload.get("uuid")
+                    if uuid is None:
+                        logger.error("Could not validate credentials")
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Could not validate credentials",
+                        )
+
+                    with Session(engine) as db:
+                        user = db.exec(select(User).where(User.uuid == uuid)).first()
+
+                except InvalidTokenError:
+                    logger.error("Invalid token")
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail="Could not validate credentials",
                     )
 
-                with Session(engine) as db:
-                    user = db.exec(select(User).where(User.uuid == uuid)).first()
+                if user is None:
+                    logger.error(f"User with uuid {uuid} not found")
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Could not validate credentials",
+                    )
 
-            except InvalidTokenError:
-                logger.error("Invalid token")
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Could not validate credentials",
-                )
+                logger.info(f"User {user.email} authenticated")
 
-            if user is None:
-                logger.error(f"User with uuid {uuid} not found")
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Could not validate credentials",
-                )
+                if user.role.to_int() < role.to_int():
+                    logger.error(f"User {user.email} does not have permission to access this resource")
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Permission denied",
+                    )
 
-            logger.info(f"User {user.email} authenticated")
-
-            if user.role.to_int() < role.to_int():
-                logger.error(f"User {user.email} does not have permission to access this resource")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Permission denied",
-                )
-
-            return user
+                return user
+            except Exception as e:
+                if role == UserRole.GUEST:
+                    return None
+                raise e
         return check_cur_user
 
     @staticmethod

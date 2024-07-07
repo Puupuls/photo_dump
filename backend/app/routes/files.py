@@ -34,7 +34,7 @@ class Files:
     )
     async def list_files(
             current_user: Annotated[User, Depends(Sessions.get_current_user(UserRole.VIEWER))],
-            album_uuid: UUID = None,
+            album_uuid: str = None,
             session=Depends(get_db)
     ):
         query = select(File).order_by(File.timeline_date.desc())
@@ -88,6 +88,24 @@ class Files:
             .where(File.hash == dbFile.hash)
         ).first()
         if existing_file:
+            if album_uuid:
+                album = session.exec(select(Album).where(Album.uuid == UUID(album_uuid))).first()
+                if not album:
+                    raise HTTPException(status_code=404, detail="Album not found")
+                album_file = AlbumFile(
+                    album_id=album.id,
+                    file_id=existing_file.id
+                )
+                # CHeck if not already in album
+                if not session.exec(
+                        select(AlbumFile)
+                        .where(AlbumFile.album_id == album_file.album_id)
+                        .where(AlbumFile.file_id == album_file.file_id)
+                ).first():
+                    session.add(album_file)
+                    session.commit()
+                    album.process_meta()
+                    session.commit()
             raise HTTPException(status_code=409, detail="File already exists")
         else:
             if dbFile.file_extension not in SUPPORTED_FILE_TYPES:
@@ -104,7 +122,12 @@ class Files:
                     album_id=album.id,
                     file_id=dbFile.id
                 )
-                session.add(album_file)
+                if not session.exec(
+                        select(AlbumFile)
+                        .where(AlbumFile.album_id == album.id)
+                        .where(AlbumFile.file_id == dbFile.id)
+                ).first():
+                    session.add(album_file)
             session.commit()
             return dbFile
 
@@ -115,6 +138,7 @@ class Files:
     async def get_files_file(
             data: FilesDownloadRequest,
             session=Depends(get_db),
+            current_user: User = Depends(Sessions.get_current_user(UserRole.GUEST)),
     ):
         files = session.exec(select(File).where(File.uuid.in_(data.files))).all()
         file_paths = [file.get_file_path() for file in files]
@@ -150,12 +174,13 @@ class Files:
 
     @staticmethod
     @router.get(
-        '/{file_uuid}'
+        '/{file_uuid}',
     )
     async def get_file_file(
             file_uuid: str,
             download: bool = False,
             session=Depends(get_db),
+            current_user: User = Depends(Sessions.get_current_user(UserRole.GUEST)),
     ):
         file = session.exec(select(File).where(File.uuid == UUID(file_uuid))).first()
 
@@ -193,8 +218,10 @@ class Files:
         for meta in metadata:
             session.delete(meta)
         albums = session.exec(select(AlbumFile).where(AlbumFile.file_id == file.id)).all()
-        for album in albums:
-            session.delete(album)
+        for album_file in albums:
+            album = session.exec(select(Album).where(Album.id == album_file.album_id)).first()
+            album.process_meta()
+            session.delete(album_file)
         session.delete(file)
         os.remove(file.get_file_path())
         session.commit()
@@ -232,6 +259,8 @@ class Files:
                     session.delete(meta)
                 albums = session.exec(select(AlbumFile).where(AlbumFile.file_id == file.id)).all()
                 for album in albums:
+                    album = session.exec(select(Album).where(Album.id == album.album_id)).first()
+                    album.process_meta()
                     session.delete(album)
                 session.delete(file)
                 session.commit()
