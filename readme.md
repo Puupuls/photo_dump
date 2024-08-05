@@ -15,7 +15,7 @@ Yes? Then this is it.... well it will be once I finish it... but you can still t
 - [X] User management
 - [X] Image select
 - [X] Image delete
-- [ ] Albums
+- [X] Albums
 - [ ] Grid update to group by date and load only in-view images
 - [ ] Better dockerisation to allow deployment of one app image not frontend and backend
 - [ ] Update image upload to check hash before upload

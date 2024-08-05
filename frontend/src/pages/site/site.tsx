@@ -70,18 +70,7 @@ function MainPage() {
                             {uiConfig.appName}
                         </Link>
                     </Typography>
-                    <Box>
-                        <Tooltip title="Upload" sx={{mr:2}}>
-                            <IconButton
-                                onClick={(e)=>Upload.instance.selectAndUpload(albumUUID)}
-                                size="small"
-                                aria-controls={menuAnchor ? 'account-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={menuAnchor ? 'true' : undefined}
-                            >
-                                <CloudUploadOutlined/>
-                            </IconButton>
-                        </Tooltip>
+                    <Box id={'extraNavbarButtons'} flex={1} display={'flex'} flexDirection={'row-reverse'}>
                         <Tooltip title="Account">
                             <IconButton
                                 onClick={(e)=>setMenuAnchor(e.currentTarget)}
@@ -93,6 +82,17 @@ function MainPage() {
                                 <Avatar sx={{ width: 32, height: 32 }}>
                                     <AccountCircleOutlined/>
                                 </Avatar>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Upload" sx={{mr:2}}>
+                            <IconButton
+                                onClick={(e)=>Upload.instance.selectAndUpload(albumUUID)}
+                                size="small"
+                                aria-controls={menuAnchor ? 'account-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={menuAnchor ? 'true' : undefined}
+                            >
+                                <CloudUploadOutlined/>
                             </IconButton>
                         </Tooltip>
                         <Menu

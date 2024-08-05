@@ -27,8 +27,6 @@ import {AlbumType} from "../../models/albumType";
 import {useNavigate} from "react-router-dom";
 
 
-
-let initialized = false;
 export const PhotosPage = () => {
     const navigate = useNavigate();
     const [isDragging, setIsDragging] = useState(false);

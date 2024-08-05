@@ -14,7 +14,13 @@ def get_url():
     return f"postgresql://{user}:{password}@{host}/{db}"
 
 
-engine = create_engine(get_url(), echo=True)
+engine = create_engine(
+    get_url(),
+    echo=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
+)
 
 
 def get_db():

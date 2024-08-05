@@ -1,8 +1,11 @@
+import io
+import zipfile
 from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select, desc
+from starlette.responses import StreamingResponse
 
 from app.deps import get_db
 from app.models.api.album_create_request import AlbumCreateRequest
@@ -117,6 +120,7 @@ class Albums:
         album_files = session.exec(select(AlbumFile).where(AlbumFile.album_id == album.id)).all()
         for album_file in album_files:
             session.delete(album_file)
+        session.commit()
         session.delete(album)
         session.commit()
 
@@ -187,3 +191,31 @@ class Albums:
             "status": "success",
             "message": "Files added to album"
         }
+
+    @staticmethod
+    @router.get(
+        '/{album_uuid}/download',
+    )
+    async def download_album(
+            album: Album = Depends(get_current_album),
+            current_user: User = Depends(Sessions.get_current_user(UserRole.VIEWER)),
+            session=Depends(get_db),
+    ):
+        files = session.exec(
+            select(File).join(AlbumFile).where(AlbumFile.album_id == album.id)
+        ).all()
+        zip_bytes_io = io.BytesIO()
+        with zipfile.ZipFile(zip_bytes_io, 'w', zipfile.ZIP_DEFLATED) as zipped:
+            for file in files:
+                zipped.write(file.get_file_path(), file.filename_original)
+        zip_bytes_io.seek(0)
+        response = StreamingResponse(
+            iter([zip_bytes_io.getvalue()]),
+            media_type="application/x-zip-compressed",
+            headers={
+                "Content-Disposition": f"attachment; filename={album.name}.zip",
+                "Content-Length": str(zip_bytes_io.getbuffer().nbytes)
+            }
+        )
+        zip_bytes_io.close()
+        return response

@@ -38,6 +38,8 @@ import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import {JustifiedGrid} from "@egjs/react-grid";
+import { ClickAwayListener } from '@mui/base/ClickAwayListener';
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 
 export const AlbumPage = () => {
@@ -129,8 +131,33 @@ export const AlbumPage = () => {
         setSelectedIndexes([]);
     }
 
-    const removeSelectedFiles = () => {
+    const downloadAlbum = () => {
+        api.get(
+            `/albums/${albumUUID}/download`,
+            {responseType: 'blob'}
+        ).then((response) => {
+            const url = window.URL.createObjectURL(response.data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = album?.name??'album';
+            a.click();
+        })
+    }
 
+    const removeSelectedFiles = () => {
+        api.delete(`/albums/${albumUUID}/files`, {
+            data: selectedIndexes.map(it => files[it].uuid),
+        }).then(() => {
+            setSelectedIndexes([]);
+            window.location.reload();
+        })
+    }
+
+    const deleteAlbum = () => {
+        window.confirm('Are you sure you want to delete this album?') &&
+            api.delete(`/albums/${albumUUID}`).then(() => {
+                window.location.href = '/albums';
+            })
     }
 
     const onSaveName = () => {
@@ -149,6 +176,15 @@ export const AlbumPage = () => {
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
     >
+        <Portal
+            container={document.getElementById('extraNavbarButtons') as HTMLElement}
+        >
+            <Tooltip title={"Download album"} sx={{mr:2}}>
+                <IconButton onClick={() => downloadAlbum()}>
+                    <DownloadOutlinedIcon/>
+                </IconButton>
+            </Tooltip>
+        </Portal>
         {selectedIndexes.length > 0 && <Toolbar
             sx={{
                 display: 'flex',
@@ -186,30 +222,60 @@ export const AlbumPage = () => {
                 </IconButton>
             </>}
         </Toolbar>}
-        <Typography variant={"h4"} sx={{
-            mt: 4, mb: 2, borderBottom: isEditing? '1px solid' : '', minWidth: 200, justifyContent: isEditing? 'space-between' : 'flex-start', display: 'flex'}}>
-            <Box
-                id={'albumName'}
-                sx={{
-                    display: 'flex',
-                    flex: isEditing? 1 : 'unset',
-                }}
-                contentEditable={isEditing}
-                onBlur={onSaveName}
-                onKeyDown={(e) => {
-                    if(e.key === 'Enter'){
-                        e.preventDefault();
-                        onSaveName();
-                    }
-                }}
-            >{album?.name}</Box>
-            {UserRoleUtil.to_int(user?.role??UserRole.GUEST)>=UserRoleUtil.to_int(UserRole.EDITOR)?
-                isEditing?
-                <IconButton onClick={onSaveName}><SaveOutlinedIcon/></IconButton>:
-                <IconButton onClick={()=>setIsEditing(true)}><EditOutlinedIcon/></IconButton>
-
-            :null}
-        </Typography>
+        {isEditing && <Toolbar
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                zIndex: 1202,
+                minWidth: '360px'
+            }}
+        >
+            <Typography variant={"h6"}>Edit</Typography>
+            <Box sx={{flex: 1}}/>
+            <IconButton onClick={onSaveName}>
+                <Tooltip title={'Save'}>
+                    <SaveOutlinedIcon/>
+                </Tooltip>
+            </IconButton>
+            <IconButton onClick={() => deleteAlbum()}>
+                <Tooltip title={"Delete album"}>
+                    <DeleteOutlinedIcon />
+                </Tooltip>
+            </IconButton>
+            <IconButton onClick={()=>setIsEditing(false)}>
+                <Tooltip title={'cancel'}>
+                    <ClearOutlinedIcon/>
+                </Tooltip>
+            </IconButton>
+        </Toolbar>}
+        <ClickAwayListener onClickAway={()=>{setIsEditing(false)}}>
+            <Typography variant={"h4"} sx={{
+                mt: 4, mb: 2, borderBottom: isEditing? '1px solid' : '', minWidth: 200, justifyContent: isEditing? 'space-between' : 'flex-start', display: 'flex'}}>
+                <Box
+                    id={'albumName'}
+                    sx={{
+                        display: 'flex',
+                        flex: isEditing? 1 : 'unset',
+                    }}
+                    contentEditable={isEditing}
+                    onBlur={onSaveName}
+                    onKeyDown={(e) => {
+                        if(e.key === 'Enter'){
+                            e.preventDefault();
+                            onSaveName();
+                        }
+                    }}
+                >{album?.name}</Box>
+                {UserRoleUtil.to_int(user?.role??UserRole.GUEST)>=UserRoleUtil.to_int(UserRole.EDITOR)?
+                    isEditing? null:
+                        <IconButton onClick={()=>setIsEditing(true)}><EditOutlinedIcon/></IconButton>
+                    :null}
+            </Typography>
+        </ClickAwayListener>
 
         <JustifiedGrid
             style={{
